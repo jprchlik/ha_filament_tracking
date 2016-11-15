@@ -15,6 +15,7 @@ class grab_gong:
         #get a list of directories
         self.dlev1 = ftp.nlst()
         self.ftp = ftp
+        self.ftpdir = ftp.pwd()
         self.end = end
         self.start = start
         self.arcdir = arcdir
@@ -52,27 +53,30 @@ class grab_gong:
         filelist = []
     #get all files in date range
         for i in dates:
-            fulldir = self.arcdir+i.strftime('%Y%m/%Y%m%d')
+            fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
             os.chdir(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d'))
             self.ftp.cwd(fulldir)
             templist = self.ftp.nlst()
+            for j in templist: self.write_loc_files(j)
+ 
     #move back to parent directory
     #retrieve files from server
-            pool = Pool(processes=self.nproc)
-            out = pool.map(write_loc_files,templist)
-            pool.close()
+#            pool = Pool(processes=self.nproc)
+#            out = pool.map(self.write_loc_files,templist)
+#            pool.close()
         
         
         
-    def write_loc_files(fname):
+    def write_loc_files(self,fname):
    
 #check to see if file exists 
         testfile = os.path.isfile(fname)
+        
 
 #if file does not exist 
         if testfile == False:
             fhandle = open(fname,'wb')    
-            ftp.retrbinary('RET {0}'.format(fname),fhandle.write)
+            self.ftp.retrbinary('RETR {0}'.format(fname),fhandle.write)
             fhandle.close()
 
 
@@ -91,7 +95,6 @@ def main(start,end,nproc=4,typ='large',verbose=False,
         print 'Folder Already exists'
 
     try:
-        print arcdir
         os.chdir(arcdir)
     except:
         print 'Folder not created in proper location. Check larc variable'
@@ -100,7 +103,8 @@ def main(start,end,nproc=4,typ='large',verbose=False,
 #connect to gong ftp archive
     ftp = ftplib.FTP('gong2.nso.edu','anonymous')
 #change directory into archive containing gong images (default = large images)
-    ftp.cwd('HA/{0}'.format(typdic[typ]))
+    ftpdir = 'HA/{0}'.format(typdic[typ])
+    ftp.cwd(ftpdir)
     try:
         test = grab_gong(start,end,ftp,arcdir,nproc,verbose)
 #close ftp when finished
