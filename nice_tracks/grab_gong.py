@@ -7,6 +7,7 @@ from multiprocessing import Pool
 
 typdic = {}
 typdic['large'] = 'hag'
+typdic['fits'] = 'haf'
 
 
 class grab_gong:
@@ -81,7 +82,7 @@ class grab_gong:
 
 
 
-def main(start,end,nproc=4,typ='large',verbose=False,
+def main(start,end,nproc=4,typ='fits',verbose=False,
          larc='/Volumes/Pegasus/jprchlik/projects/ha_filaments/gong'):
 
 #make sure archive dir has an ending /
