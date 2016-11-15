@@ -11,7 +11,7 @@ typdic['large'] = 'hag'
 
 class grab_gong:
 
-    def __init__(self,start,end,ftp,arcdir,nproc):
+    def __init__(self,start,end,ftp,arcdir,nproc,verbose):
         #get a list of directories
         self.dlev1 = ftp.nlst()
         self.ftp = ftp
@@ -19,6 +19,7 @@ class grab_gong:
         self.start = start
         self.arcdir = arcdir
         self.nproc = nproc
+        self.verbose = verbose
 # create local archive
         self.mkloc_arc()
 #grab the ftp archive files in range
@@ -39,7 +40,8 @@ class grab_gong:
         try:
             os.mkdir(adir)
         except:
-            print 'Directory {0} already exists'.format(adir)
+            if self.verbose:
+                print 'Directory {0} already exists'.format(adir)
         
 
 #get files in date range from ftp archive
@@ -75,7 +77,7 @@ class grab_gong:
 
 
 
-def main(start,end,nproc=4,typ='large',
+def main(start,end,nproc=4,typ='large',verbose=False,
          larc='/Volumes/Pegasus/jprchlik/projects/ha_filaments/gong'):
 
 #make sure archive dir has an ending /
@@ -100,7 +102,7 @@ def main(start,end,nproc=4,typ='large',
 #change directory into archive containing gong images (default = large images)
     ftp.cwd('HA/{0}'.format(typdic[typ]))
     try:
-        test = grab_gong(start,end,ftp,arcdir,nproc)
+        test = grab_gong(start,end,ftp,arcdir,nproc,verbose)
 #close ftp when finished
         ftp.close()
 
