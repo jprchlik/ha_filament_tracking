@@ -71,7 +71,7 @@ class halpha_plot:
     #create figure and add sun
         self.fig, self.ax = plt.subplots(figsize=(7,7),dpi=dpi)
 
-        self.ax.imshow(sundat,cmap=plt.cm.gray,extent=[x0,x0+dx*sx,y0,y0+dy*sy])
+        self.ax.imshow(sundat,cmap=plt.cm.gray,extent=[x0,x0+dx*sx,y0+dy*sy,y0])
         self.ax.text(x0,y0,sun[1].header['DATE-OBS'],color='white',fontsize=18,fontweight='bold')
 #        rs = plt.Circle((0.,0.),radius=1000.,color='gray',fill=False,linewidth=5,zorder=0)
 #        ax.add_patch(rs)
