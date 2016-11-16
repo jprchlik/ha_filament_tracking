@@ -17,6 +17,7 @@ class halpha_plot:
         self.dat = dat
         self.ifile = ifile
         self.tid = tid
+        self.pdir = pdir
 
 
   
@@ -88,7 +89,7 @@ class halpha_plot:
         ax.set_ylabel('Solar Y [arcsec]')
     
     #save fig
-        fig.savefig('track_plots/'+self.ofile,bbox_pad=.1,bbox_inches='tight',dpi=dpi)
+        fig.savefig(self.pdir+self.ofile,bbox_pad=.1,bbox_inches='tight',dpi=dpi)
         fig.clear()
         plt.close()
     
