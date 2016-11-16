@@ -35,11 +35,9 @@ class halpha_plot:
 
     def plot_rotation(self,start,coor,dh=0,color='red',linestyle='-'):
     
-    #add to stoptime 
-        stop = datetime.datetime.strptime(self.ofile[:-6],'%Y%m%d%H%M%S')
         xs, ys = self.calc_poly_values(coor)
     #calculate the mean position
-        stopx, stopy = solar_rotation.rot_hpc(xs*u.arcsec,ys*u.arcsec,start,stop)
+        stopx, stopy = solar_rotation.rot_hpc(xs*u.arcsec,ys*u.arcsec,start,self.stop)
     #get rid of units
         stopx, stopy = stopx.value, stopy.value
     
@@ -67,6 +65,8 @@ class halpha_plot:
         dy = 1.#assumed approximate
   
         sx, sy = np.shape(sundat)
+    #add to stoptime (i.e. observed time) 
+        self.stop = datetime.datetime.strptime(self.ofile[:-6],'%Y%m%d%H%M%S')
     
     #create figure and add sun
         self.fig, self.ax = plt.subplots(figsize=(7,7),dpi=dpi)
@@ -83,7 +83,15 @@ class halpha_plot:
             poly = plt.Polygon(loads(self.dat['hpc_bbox'].values[j]).exterior,color=inc,linewidth=0.5,fill=None)
             self.ax.add_patch(poly)
     #over plot rotation track
-            self.plot_rotation(self.dat['event_starttime_dt'][j],self.dat['hpc_bbox'].values[j],color='green')
+        if good.size > 1:
+     #array of time differences between obs and filament track
+            td = np.abs(self.dat['event_starttime_dt'][good]-self.stop)
+            nearest, = np.where(td == td.min())
+            roplot = good[nearest][0] #nearest filament trace in time
+        else: 
+            roplot = good[0]
+#plot rotation of nearest filament placement
+        self.plot_rotation(self.dat['event_starttime_dt'][roplot],self.dat['hpc_bbox'].values[roplot],color='green')
     
     
     #Setup plots
