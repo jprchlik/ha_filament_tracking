@@ -58,7 +58,9 @@ class grab_gong:
             fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
             os.chdir(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d'))
             self.ftp.cwd(fulldir)
-            templist = self.ftp.nlst()[::self.skip]
+            templist = self.ftp.nlst() #get list of files on server
+            templist = [s for s in templist if "L" not in s] #skip Learmonth, Australia because they are not rotated properly
+            templist = templist[::self.skip]#grab only every so many returned files
             for j in templist:
                 self.write_loc_files(j)
                 self.filelist.append(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d')+'/'+j)
