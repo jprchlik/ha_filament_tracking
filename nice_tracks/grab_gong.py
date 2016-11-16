@@ -12,7 +12,7 @@ typdic['fits'] = 'haf'
 
 class grab_gong:
 
-    def __init__(self,start,end,ftp,arcdir,nproc,verbose):
+    def __init__(self,start,end,ftp,arcdir,nproc,skip,verbose):
         #get a list of directories
         self.dlev1 = ftp.nlst()
         self.ftp = ftp
@@ -22,6 +22,7 @@ class grab_gong:
         self.arcdir = arcdir
         self.nproc = nproc
         self.verbose = verbose
+        self.skip = skip
 # create local archive
         self.mkloc_arc()
 #grab the ftp archive files in range
@@ -51,14 +52,16 @@ class grab_gong:
     # list of days in range as datetime object
         dates = [ self.start +timedelta(n) for n in range(int ((self.end - self.start).days))]
     #create day file list
-        filelist = []
+        self.filelist = []
     #get all files in date range
         for i in dates:
             fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
             os.chdir(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d'))
             self.ftp.cwd(fulldir)
-            templist = self.ftp.nlst()
-            for j in templist: self.write_loc_files(j)
+            templist = self.ftp.nlst()[::self.skip]
+            for j in templist:
+                self.write_loc_files(j)
+                self.filelist.append(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d')+'/'+j)
  
     #move back to parent directory
     #retrieve files from server
@@ -82,7 +85,7 @@ class grab_gong:
 
 
 
-def main(start,end,nproc=4,typ='fits',verbose=False,
+def main(start,end,nproc=4,typ='fits',verbose=False,skip=100,
          larc='/Volumes/Pegasus/jprchlik/projects/ha_filaments/gong'):
 
 #make sure archive dir has an ending /
@@ -107,9 +110,11 @@ def main(start,end,nproc=4,typ='fits',verbose=False,
     ftpdir = 'HA/{0}'.format(typdic[typ])
     ftp.cwd(ftpdir)
     try:
-        test = grab_gong(start,end,ftp,arcdir,nproc,verbose)
+        test = grab_gong(start,end,ftp,arcdir,nproc,skip,verbose)
 #close ftp when finished
         ftp.close()
+#return variable class which includes the all important file list
+        return test
 
     except:
         print 'Failed unexpectedly, closing ftp access', sys.exc_info()[0]
