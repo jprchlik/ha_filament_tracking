@@ -73,6 +73,7 @@ class halpha_plot:
         fig, ax = plt.subplots(figsize=(7,7),dpi=dpi)
 
         ax.imshow(sundat,cmap=plt.cm.gray,extent=[x0,x0+dx*sx,y0,y0+dy*sy])
+        ax.text(x0,y0,sun[1].header['DATE-OBS'],color='white',fontsize=18,fontweight='bold')
 #        rs = plt.Circle((0.,0.),radius=1000.,color='gray',fill=False,linewidth=5,zorder=0)
 #        ax.add_patch(rs)
     
@@ -88,7 +89,7 @@ class halpha_plot:
     
     #Setup plots
         ticks = [-1000.,-500.,0.,500.,1000.]
-        lim = [-1200.,1200.]
+        lim = [x0,x0+sx*dx]
         ax.set_xlim(lim)
         ax.set_ylim(lim)
         ax.set_xticks(ticks)
