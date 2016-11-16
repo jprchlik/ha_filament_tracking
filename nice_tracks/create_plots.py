@@ -33,20 +33,20 @@ class halpha_plot:
 
         return corarra[:,0],corarra[:,1]
 
-    def plot_rotation(self,start,coor,ax,dh=0,color='red',linestyle='-'):
+    def plot_rotation(self,start,coor,dh=0,color='red',linestyle='-'):
     
     #add to stoptime 
         stop = datetime.datetime.strptime(self.ofile[:-6],'%Y%m%d%H%M%S')
         xs, ys = self.calc_poly_values(coor)
     #calculate the mean position
-        stopx, stopy = solar_rotation.rot_hpc(float(xs[0])*u.arcsec,float(ys[0])*u.arcsec,start,stop)
+        stopx, stopy = solar_rotation.rot_hpc(xs*u.arcsec,ys*u.arcsec,start,stop)
     #get rid of units
         stopx, stopy = stopx.value, stopy.value
+        print stopx, stopy
     
     
-        ax.plot(stopx,stopy,linestyle=linestyle,color=color)
+        self.ax.plot(stopx,stopy,linestyle=linestyle,color=color,zorder=500)
     #    ax.text(meanx,meany,'{0:6d}'.format(tid),color=color,fontsize=8)
-        return ax
     
     def plot_filament_track(self):
 
@@ -70,10 +70,10 @@ class halpha_plot:
         sx, sy = np.shape(sundat)
     
     #create figure and add sun
-        fig, ax = plt.subplots(figsize=(7,7),dpi=dpi)
+        self.fig, self.ax = plt.subplots(figsize=(7,7),dpi=dpi)
 
-        ax.imshow(sundat,cmap=plt.cm.gray,extent=[x0,x0+dx*sx,y0,y0+dy*sy])
-        ax.text(x0,y0,sun[1].header['DATE-OBS'],color='white',fontsize=18,fontweight='bold')
+        self.ax.imshow(sundat,cmap=plt.cm.gray,extent=[x0,x0+dx*sx,y0,y0+dy*sy])
+        self.ax.text(x0,y0,sun[1].header['DATE-OBS'],color='white',fontsize=18,fontweight='bold')
 #        rs = plt.Circle((0.,0.),radius=1000.,color='gray',fill=False,linewidth=5,zorder=0)
 #        ax.add_patch(rs)
     
@@ -82,23 +82,23 @@ class halpha_plot:
             inc = 'red'
             if self.dat['obs_observatory'].values[j] == 'HA2': inc='blue'
             poly = plt.Polygon(loads(self.dat['hpc_bbox'].values[j]).exterior,color=inc,linewidth=0.5,fill=None)
-            ax.add_patch(poly)
+            self.ax.add_patch(poly)
     #over plot rotation track
-            ax = self.plot_rotation(self.dat['event_starttime_dt'][j],self.dat['hpc_bbox'].values[j],ax,color='green')
+            self.plot_rotation(self.dat['event_starttime_dt'][j],self.dat['hpc_bbox'].values[j],color='green')
     
     
     #Setup plots
         ticks = [-1000.,-500.,0.,500.,1000.]
         lim = [x0,x0+sx*dx]
-        ax.set_xlim(lim)
-        ax.set_ylim(lim)
-        ax.set_xticks(ticks)
-        ax.set_yticks(ticks)
-        ax.set_xlabel('Solar X [arcsec]')
-        ax.set_ylabel('Solar Y [arcsec]')
+        self.ax.set_xlim(lim)
+        self.ax.set_ylim(lim)
+        self.ax.set_xticks(ticks)
+        self.ax.set_yticks(ticks)
+        self.ax.set_xlabel('Solar X [arcsec]')
+        self.ax.set_ylabel('Solar Y [arcsec]')
     
     #save fig
-        fig.savefig(self.pdir+self.ofile,bbox_pad=.1,bbox_inches='tight',dpi=dpi)
-        fig.clear()
+        self.fig.savefig(self.pdir+self.ofile,bbox_pad=.1,bbox_inches='tight',dpi=dpi)
+        self.fig.clear()
         plt.close()
     
