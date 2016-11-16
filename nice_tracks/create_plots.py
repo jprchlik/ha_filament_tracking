@@ -42,7 +42,6 @@ class halpha_plot:
         stopx, stopy = solar_rotation.rot_hpc(xs*u.arcsec,ys*u.arcsec,start,stop)
     #get rid of units
         stopx, stopy = stopx.value, stopy.value
-        print stopx, stopy
     
     
         self.ax.plot(stopx,stopy,linestyle=linestyle,color=color,zorder=500)
