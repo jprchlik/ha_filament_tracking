@@ -9,6 +9,17 @@ import os
 def get_best_track(tid):
 
     track, = np.where(dat['track_id'].values == tid)
+   
+    stid = '{0:6.0f}'.format(tid).replace(' ','0')
+    spdir = '{0}{1}/'.format(pdir,stid)
+#create plot subdirectory based on plot id
+    try:
+        os.mkdir(spdir)
+    except:
+        print 'Directory {0} exists. Proceeding..'.format(stid)
+
+    
+        
     
 #get the start and end time of the track    
     start = dat['event_starttime_dt'][track[0]]
@@ -17,7 +28,7 @@ def get_best_track(tid):
     flist = grab_gong.main(start,end).filelist
     
     for i in flist:
-        out = halpha_plot(dat,i,tid,pdir)
+        out = halpha_plot(dat,i,tid,spdir)
         out.plot_filament_track()
     
 
@@ -42,7 +53,13 @@ pdir = sdir+'/track_plots/'
 
 goodtracks = np.loadtxt('list_of_excellent_tracks')
 
-get_best_track(goodtracks[0])
+nproc = 8
+#do in parallel all good tracks
+pool =Pool(processes=nproc)
+out = pool.map(get_best_track,goodtracks)
+pool.close()
+
+#get_best_track(goodtracks[0])
 
 
 
