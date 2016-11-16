@@ -6,7 +6,7 @@ import pandas as pd
 from multiprocessing import Pool
 from create_plots import halpha_plot
 import os
-def get_best_tracks(tid):
+def get_best_track(tid):
 
     track, = np.where(dat['track_id'].values == tid)
     
