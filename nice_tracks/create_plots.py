@@ -58,13 +58,21 @@ class halpha_plot:
 #        ofname = '{0}_track{1:6d}'.format(dat['event_starttime'][good[0]],i).replace(' ','0').replace(':','_')
         self.ofile = self.ifile.split('/')[-1].replace('fits.fz','png')
         sun = pyfits.open(self.ifile)
-   
+#Solar Halpha data   
         sundat = sun[1].data
+#get image extent (i.e. physical coordinates)
+        x0 = sun[1].header['CRVAL1']-sun[1].header['CRPIX1']
+        y0 = sun[1].header['CRVAL2']-sun[1].header['CRPIX2']
+
+        dx = 1.#assumed approximate
+        dy = 1.#assumed approximate
+  
+        sx, sy = np.shape(sundat)
     
     #create figure and add sun
         fig, ax = plt.subplots(figsize=(7,7),dpi=dpi)
 
-        ax.imshow(sundat,cmap=plt.cm.gray)
+        ax.imshow(sundat,cmap=plt.cm.gray,extent=[x0,x0+dx*sx,y0,y0+dy*sy])
 #        rs = plt.Circle((0.,0.),radius=1000.,color='gray',fill=False,linewidth=5,zorder=0)
 #        ax.add_patch(rs)
     
