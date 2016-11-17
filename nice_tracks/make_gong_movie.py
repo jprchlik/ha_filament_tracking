@@ -55,11 +55,11 @@ goodtracks = np.loadtxt('list_of_excellent_tracks')
 
 nproc = 8
 #do in parallel all good tracks
-#pool =Pool(processes=nproc)
-#out = pool.map(get_best_track,goodtracks)
-#pool.close()
+pool =Pool(processes=nproc)
+out = pool.map(get_best_track,goodtracks)
+pool.close()
 
-get_best_track(goodtracks[0])
+#get_best_track(goodtracks[0])
 
 
 
