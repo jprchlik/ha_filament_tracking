@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import make_movie
 import numpy as np
 import grab_gong
 import add_properties as ap
@@ -62,4 +63,7 @@ out = pool.map(create_images,flist)
 pool.close()
 
 
+#create movie from image files
+imov = make_movie.create_movie(w0=2048,h0=2048,nproc=4,outmov='halpha_filament_movie.mp4')
+imov.create_movie()
 
