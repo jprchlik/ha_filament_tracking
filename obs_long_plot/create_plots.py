@@ -13,15 +13,53 @@ import datetime
 
 
 class halpha_plot:
+    """ A class which creates an image from an input file.
+        Currently used to create H alpha GONG images."""
 
     def __init__(self,dat,ifile,pdir):
+        """Initializes variables to be used by the halpha_plot class.
+
+           This function just creates the object to be class later.
+
+           Parameters
+           ----------
+           dat  :  pandas object
+              The pandas object is the read in track data file FITtracked_3yr.txt
+           ifile: string
+              ifile is the input GONG H alpha file
+           pdir : string
+              pdir is a string which points to the directory for plotting
+         
+           Returns
+           -------
+           obj
+              Returns initialized halpha_plot class
+        """
         self.dat = dat
         self.ifile = ifile
         self.pdir = pdir
 
 
   
-    def  calc_poly_values(self,coor):
+    def calc_poly_values(self,coor):
+        """calc_poly_values returns an array of x,y values from Polygon string in pandas object
+         
+           calc_poly_values parses a POLYGON string from the track pandas object by splitting on commas 
+           and assuming coordiantes are in the order x1,y1,x2,y2,ect
+
+           Parameters
+           ----------
+           coor : string
+               POLYGON string from FITracked_3yr.txt
+           
+           Returns
+           -------
+           x : numpy array
+               x values of Polygon coordinates
+           y : numpy array
+               y values of Polygon coordinates
+        """
+
     #list of polygon coordinates
         corlist =  coor.replace('POLYGON((','').replace('))','').split(',')
     #create array and calculate mean x,y value for start
@@ -34,6 +72,32 @@ class halpha_plot:
         return corarra[:,0],corarra[:,1]
 
     def plot_rotation(self,start,coor,dh=0,color='red',linestyle='-',alpha=0.5):
+        """
+        plot_rotation overplots a h alpha filament track accounting for solar roation
+
+        The function plot_rotation uses the current image time to correct the track observation time for solar rotation.
+        To correct for rotation the function uses the solar_rotation module from sunpy
+
+        Parameters
+        ----------
+        start: datetime object
+            start is the observed time of the track.
+        coor : str
+            coor is the polygon string for the track's shape.
+        dh   : datetime object
+            dh is deprecated, thus no longer used by plot_rotation (default = 0)
+        color: str
+            color is the numpy string color to used for outlining the track (default = 'red').
+        linestyle: str
+            linstyle is the matplotlib string to use for the line (default = '-')
+        alpha: float
+            alpha is the opacity of the line to plot (default = 0.5, range = [0.0,1.0])
+
+        Returns
+        -------
+        None
+       
+        """
     
         xs, ys = self.calc_poly_values(coor)
     #calculate the mean position
@@ -47,7 +111,22 @@ class halpha_plot:
     
     def plot_filament_track(self):
 
-    
+        """
+        Function to create H alpha GONG plots with tracks overplotted
+
+        plot_filament_tracks creates png files of GONG halpha data with all observed H alpha filament tracks visible on the sun at that time.
+        The function can only be called after initialization of the halpha_plot object. 
+
+
+        Parameters
+        ----------
+        self
+
+        Returns
+        -------
+        H alpha with with tracks overplotted
+
+        """ 
 
     
     #get start time of track for filename
