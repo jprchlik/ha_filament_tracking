@@ -4,6 +4,8 @@ import calendar
 from datetime import datetime,timedelta
 import os
 from multiprocessing import Pool
+from astropy.io import fits
+import numpy as np
 
 typdic = {}
 typdic['large'] = 'hag'
@@ -14,7 +16,7 @@ class grab_gong:
     """The grab_gong class creates an object which can download files from GONG ftp archive. 
        It takes just a start and endtime after initialization by main """
 
-    def __init__(self,start,end,ftp,arcdir,nproc,skip,verbose):
+    def __init__(self,start,end,ftp,arcdir,nproc,cad,verbose):
         """grab_gong class initialization which is called and set by main"""
         #get a list of directories
         self.dlev1 = ftp.nlst()
@@ -25,7 +27,7 @@ class grab_gong:
         self.arcdir = arcdir
         self.nproc = nproc
         self.verbose = verbose
-        self.skip = skip
+        self.cad = cad
 # create local archive
         self.mkloc_arc()
 #grab the ftp archive files in range
@@ -50,26 +52,80 @@ class grab_gong:
         except:
             if self.verbose:
                 print 'Directory {0} already exists'.format(adir)
-        
+
+#retrieve desired cadence from file list
+    def des_cad(self,start,end,delta):
+        """Create an array from start to end with desired cadence"""
+        curr = start
+        while curr < end:
+            yield curr
+            curr += delta
+
+
 
 #get files in date range from ftp archive
     def getfiles(self):
         """Retrieve file list and download files from the GONG archive. It requires not addition arguments than those set up by the object."""
     # list of days in range as datetime object
         dates = [ self.start +timedelta(n) for n in range(int ((self.end - self.start).days))]
+
+    #desired cadence for the observations
+        real_cad = [result for result in self.des_cad(self.start,self.end,timedelta(minutes=self.cad))]
+        real_cad = np.array(real_cad) #turn into numpy array
     #create day file list
         self.filelist = []
-    #get all files in date range
+
+#list for files and their observation times
+        templist = []
+        timelist = []
+
+
+    #get all files in date range from ftp server
         for i in dates:
             fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
-            os.chdir(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d'))
             self.ftp.cwd(fulldir)
-            templist = self.ftp.nlst() #get list of files on server
-            templist = [s for s in templist if "L" not in s] #skip Learmonth, Australia because they are not rotated properly
-            templist = templist[::self.skip]#grab only every so many returned files
-            for j in templist:
-                self.write_loc_files(j)
-                self.filelist.append(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d')+'/'+j)
+            inlist = self.ftp.nlst()
+            for j in inlist: templist.append(j) #get list of files on server
+
+        templist = [s for s in templist if "L" not in s] #skip Learmonth, Australia because they are not rotated properly
+
+        timelist = [datetime.strptime(k[:14],'%Y%m%d%H%M%S') for k in templist] #file list as datetime objects
+
+        diff_mat = np.abs(np.matrix(real_cad).T-np.matrix(timelist)) # find the minimum time corresponding to minimum
+        timelist = np.array(timelist) #convert timelist to numpy array
+       
+        index_list = [] #list of index to keep from ftp gong server
+        for j,k in enumerate(diff_mat): #loop over all cadence values to find best array values
+            zindex,rindex, = np.where(k == k.min()) #get the nonzero array index value
+            index_list.append(rindex[0]) # add index list to call for download
+            
+
+        templist = np.array(templist) # allow index calling
+        for p in index_list:
+            failed = True # check that file passed quick quality check (sharpness greater than .01 empirically determined)
+            m = p
+        
+            k = 0
+            while failed:
+                p = m+k #jump back and forth until a file passes inspection 
+                j = templist[m] # get the index corresponding to the closest time
+                i = timelist[m]
+#change local directory
+                os.chdir(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d'))
+#change ftp directory
+                fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
+                if self.ftp.pwd() != fulldir: current = self.ftp.cwd(fulldir)
+
+
+                failed = self.write_loc_files(j)
+                k = np.abs(k)+1
+                k = k*(-1)**k #alt looking before and after index for a good file
+                if abs(k) > 10: #max out out on 5 each way
+                    failed = False
+                    i = timelist[p]
+                    j = templist[p]
+                if failed == False: #only add to process file list (i.e. movie list) if time passes quality checks
+                    self.filelist.append(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d')+'/'+j)
  
     #move back to parent directory
     #retrieve files from server
@@ -88,20 +144,46 @@ class grab_gong:
 
 #if file does not exist 
         if testfile == False:
+            print fname
             fhandle = open(fname,'wb')    
-            self.ftp.retrbinary('RETR {0}'.format(fname),fhandle.write)
+            try:
+                self.ftp.retrbinary('RETR {0}'.format(fname),fhandle.write)
+            except:#prevents file permission error from killing loop
+                fhandle.close()
+                return True
+          
+                
             fhandle.close()
 
+#data data to roughly see if it is good
+        try:
+            dat = fits.open(fname)
+            failed = dat[1].header['SHARPNSS'] <  0.01 #empirically derived sharpness value for good data
+        except IOError:
+            os.remove(fname)
+            fhandle = open(fname,'wb')    
+            try: #prevents file permission error from killing loop
+                self.ftp.retrbinary('RETR {0}'.format(fname),fhandle.write)
+            except:
+                fhandle.close()
+                return True
+            fhandle.close()
+            dat = fits.open(fname)
+            failed = dat[1].header['SHARPNSS'] <  0.01 #empirically derived sharpness value for good data
+            
+        return failed
+    
 
 
-def main(start,end,nproc=4,typ='fits',verbose=False,skip=100,
+
+def main(start,end,nproc=4,typ='fits',verbose=False,cad=120,
          larc='/Volumes/Pegasus/jprchlik/projects/ha_filaments/gong'):
     """Main loop of program. It is written to send information to grab_gong class.
        The program requires the start and end times be python datetime objects. 
        The optional inputs are as follows: nproc is the number of processors to use while downloading (default = 4, deprecated),
        typ is the type of file to download from the ftp server (default = 'fits'),
        verbose is present but not well implemented,
-       skip is the file cadence to download (default = 100, so download only 1 file per 100),
+       cad is the cadence to download (default = 120 minutes, so download only 1 file per 120 minutes),
        larc is the local archive directory location (default = /Volumes/Pegasus/jprchlik/projects/ha_filaments/gong)""" 
        
 
@@ -128,7 +210,7 @@ def main(start,end,nproc=4,typ='fits',verbose=False,skip=100,
     ftpdir = 'HA/{0}'.format(typdic[typ])
     ftp.cwd(ftpdir)
     try:
-        test = grab_gong(start,end,ftp,arcdir,nproc,skip,verbose)
+        test = grab_gong(start,end,ftp,arcdir,nproc,cad,verbose)
 #close ftp when finished
         ftp.close()
 #return variable class which includes the all important file list
