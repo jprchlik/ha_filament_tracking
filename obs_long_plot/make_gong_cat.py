@@ -24,14 +24,18 @@ def create_images(i):
 #start = datetime.strptime('2013/01/00T00:00:00',fmt)
 #end = datetime.strptime('2013/01/31T23:59:59',fmt)
 
-infile = '../init_data/FITracked_3yr.txt'
-#dat = ascii.read('../init_data/FITracked_3yr.txt',delimiter='\t',guess=False)
-dat = pd.read_csv(infile,delimiter='\t')
+pickled = os.path.isfile('../init_data/FITracked_3yr.pic')
+if pickled:#use pickle file if it already exits
+    dat = pd.read_pickle('../init_data/FITracked_3yr.pic')
+else: #create pickle file if doesnt exist
+    infile = '../init_data/FITracked_3yr.txt'
+    #dat = ascii.read('../init_data/FITracked_3yr.txt',delimiter='\t',guess=False)
+    dat = pd.read_csv(infile,delimiter='\t')
+    #add variables like datetime and average position to dat
+    dat = ap.add_props(dat).dat
+    dat.to_pickle('../init_data/FITracked_3yr.pic')
+
 dfmt = '%Y-%m-%dT%H:%M:%S'
-
-#add variables like datetime and average position to dat
-dat = ap.add_props(dat).dat
-
 #set up plot directory
 sdir = os.getcwd()
 pdir = sdir+'/track_plots/'
@@ -40,6 +44,10 @@ try:
     os.mkdir(pdir)
 except:
     print 'Directory {0} already exists'.format(pdir)
+try:
+    os.mkdir(pdir+'symlinks')
+except:
+    print 'Directory {0} already exists'.format(pdir+'symlinks')
 
 
 nproc = 8
@@ -50,20 +58,26 @@ nproc = 8
 
 
 start = '2012-01-01T00:00:00'
-end   = '2015-12-31T00:00:00'
+end   = '2014-12-01T00:00:00'
 
 
 ostart = datetime.strptime(start,dfmt)
 oend   = datetime.strptime(end,dfmt)
 
+rdir = os.getcwd() #return to current working directory before making movie
+
+print 'STARTING DOWNLOAD'
 flist = get_best_track(ostart,oend)
+
+os.chdir(rdir)
 #do in parallel 
 pool =Pool(processes=nproc)
 out = pool.map(create_images,flist)
 pool.close()
 
 
+os.chdir(rdir)
 #create movie from image files
-imov = make_movie.create_movie(w0=2048,h0=2048,nproc=4,outmov='halpha_filament_movie.mp4')
+imov = make_movie.create_movie(w0=2048,h0=2048,nproc=4,outmov='halpha_filament_movie_test.mp4')
 imov.create_movie()
 
