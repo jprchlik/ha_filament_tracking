@@ -1,9 +1,32 @@
 import datetime 
 import numpy as np
 
-class add_props():
+class add_props:
+    """
+    add_props adds useful properties to FITracked pandas object.
+
+    add_props adds a few useful properties to the FITracked pandas object.
+    The list of added properties are as follows:
+    two date time arrays for the track observed start date and end date,
+    the mean value of the Polygon,
+    and the start and end date of the entire track.
+    
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    None
+
+
+    """
 
     def __init__(self,dat):
+        """
+        Init and add all properties to pandas object
+
+        """
         self.dat = dat
         self.add_dt_obj()
         self.add_mean_val()
@@ -11,6 +34,11 @@ class add_props():
 
 #add datetime object to array
     def add_dt_obj(self):
+        """
+        Add event start and end time datetime objects
+
+        """
+
         #date format
         dfmt = '%Y-%m-%dT%H:%M:%S'
         
