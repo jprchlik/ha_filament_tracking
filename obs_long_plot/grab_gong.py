@@ -114,7 +114,7 @@ class grab_gong:
                 os.chdir(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d'))
 #change ftp directory
                 fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
-                if self.ftp.pwd() != fulldir: current = self.ftp.cwd(fulldir)
+                if self.ftp.pwd() != fulldir: self.ftp.cwd(fulldir)
 
 
                 failed = self.write_loc_files(j)
