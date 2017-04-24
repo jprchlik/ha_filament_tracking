@@ -103,6 +103,8 @@ class grab_gong:
 ####            
 ####
 ####        templist = np.array(templist) # allow index calling
+        self.ftp =  ftplib.FTP('gong2.nso.edu','anonymous') #make sure you are properly connect)ed
+        self.ftp.cwd('HA/haf')
         for p in index_list:
             failed = True # check that file passed quick quality check (sharpness greater than .01 empirically determined)
             m = p
@@ -146,7 +148,6 @@ class grab_gong:
 
 #if file does not exist 
         if testfile == False:
-            print fname
             fhandle = open(fname,'wb')    
             try:
                 self.ftp.retrbinary('RETR {0}'.format(fname),fhandle.write)
