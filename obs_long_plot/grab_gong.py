@@ -90,17 +90,19 @@ class grab_gong:
         templist = [s for s in templist if "L" not in s] #skip Learmonth, Australia because they are not rotated properly
 
         timelist = [datetime.strptime(k[:14],'%Y%m%d%H%M%S') for k in templist] #file list as datetime objects
-
-        diff_mat = np.abs(np.matrix(real_cad).T-np.matrix(timelist)) # find the minimum time corresponding to minimum
         timelist = np.array(timelist) #convert timelist to numpy array
-       
-        index_list = [] #list of index to keep from ftp gong server
-        for j,k in enumerate(diff_mat): #loop over all cadence values to find best array values
-            zindex,rindex, = np.where(k == k.min()) #get the nonzero array index value
-            index_list.append(rindex[0]) # add index list to call for download
-            
 
-        templist = np.array(templist) # allow index calling
+#CONSUMES TOO MUCH MEMORY TO DO SUBTRACTION OVER YEARS
+####        diff_mat = np.abs(np.matrix(real_cad).T-np.matrix(timelist)) # find the minimum time corresponding to minimum
+####       
+        index_list = [] #list of index to keep from ftp gong server
+        for j,p in enumerate(real_cad): #loop over all cadence values to find best array values
+            k = np.abs(timelist-p)
+            rindex, = np.where(k == k.min()) #get the nonzero array index value
+            index_list.append(rindex[0]) # add index list to call for download
+####            
+####
+####        templist = np.array(templist) # allow index calling
         for p in index_list:
             failed = True # check that file passed quick quality check (sharpness greater than .01 empirically determined)
             m = p
