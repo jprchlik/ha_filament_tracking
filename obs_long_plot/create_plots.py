@@ -171,7 +171,9 @@ class halpha_plot:
     #Turn off axis
             self.ax.set_axis_off()
     
-            self.ax.imshow(sundat,cmap=plt.cm.gray,extent=[sf*x0,sf*(x0+dx*sx),sf*y0,sf*(y0+dy*sy)],origin='lower')
+            stat_max = 4300.
+            stat_min = 75.
+            self.ax.imshow(sundat,cmap=plt.cm.gray,extent=[sf*x0,sf*(x0+dx*sx),sf*y0,sf*(y0+dy*sy)],origin='lower',vmin=stat_min,vmax=stat_max)
     #text offset
             poff = 0.01
             self.ax.text(sf*x0+poff*sf*(dx*sx-x0),sf*y0+poff*sf*(dy*sy-y0),sun[1].header['DATE-OBS'],color='white',fontsize=38,fontweight='bold')
