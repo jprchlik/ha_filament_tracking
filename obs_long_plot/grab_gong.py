@@ -16,7 +16,7 @@ class grab_gong:
     """The grab_gong class creates an object which can download files from GONG ftp archive. 
        It takes just a start and endtime after initialization by main """
 
-    def __init__(self,start,end,ftp,arcdir,nproc,cad,verbose):
+    def __init__(self,start,end,ftp,arcdir,nproc,cad,verbose,local):
         """grab_gong class initialization which is called and set by main"""
         #get a list of directories
         self.dlev1 = ftp.nlst()
@@ -28,6 +28,8 @@ class grab_gong:
         self.nproc = nproc
         self.verbose = verbose
         self.cad = cad
+#use only local files
+        self.local = local
 # create local archive
         self.mkloc_arc()
 #grab the ftp archive files in range
@@ -80,12 +82,20 @@ class grab_gong:
         timelist = []
 
 
+    #get all files in date range from local archive: 
+        if self.local:
+            for i in dates:
+                os.chdir(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d'))
+                inlist = os.listdir('./')
+                for j in inlist: templist.append(j) #get list of files on server
+
+        else:
     #get all files in date range from ftp server
-        for i in dates:
-            fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
-            self.ftp.cwd(fulldir)
-            inlist = self.ftp.nlst()
-            for j in inlist: templist.append(j) #get list of files on server
+            for i in dates:
+                fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
+                self.ftp.cwd(fulldir)
+                inlist = self.ftp.nlst()
+                for j in inlist: templist.append(j) #get list of files on server
 
         templist = [s for s in templist if "L" not in s] #skip Learmonth, Australia because they are not rotated properly
 
@@ -103,8 +113,12 @@ class grab_gong:
 ####            
 ####
 ####        templist = np.array(templist) # allow index calling
-        self.ftp =  ftplib.FTP('gong2.nso.edu','anonymous') #make sure you are properly connect)ed
-        self.ftp.cwd('HA/haf')
+#Only check if local variable is set to false
+        if self.local == False:
+            self.ftp =  ftplib.FTP('gong2.nso.edu','anonymous') #make sure you are properly connect)ed
+            self.ftp.cwd('HA/haf')
+
+#loop over all indices to find halpha with desired cadence
         for p in index_list:
             failed = True # check that file passed quick quality check (sharpness greater than .01 empirically determined)
             m = p
@@ -114,14 +128,20 @@ class grab_gong:
                 p = m+k #jump back and forth until a file passes inspection 
                 j = templist[m] # get the index corresponding to the closest time
                 i = timelist[m]
-#change local directory
+
+    #change local directory
                 os.chdir(self.arcdir+'/'+i.strftime('%Y%m/%Y%m%d'))
-#change ftp directory
-                fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
-                if self.ftp.pwd() != fulldir: self.ftp.cwd(fulldir)
+                if self.local:
+                    dat = fits.open(j)
+                    failed = dat[1].header['SHARPNSS'] <  0.01 #empirically derived sharpness value for good data
+
+                else:
+    #change ftp directory if not local
+                    fulldir = self.ftpdir+'/'+i.strftime('%Y%m/%Y%m%d')
+                    if self.ftp.pwd() != fulldir: self.ftp.cwd(fulldir)
+                    failed = self.write_loc_files(j)
 
 
-                failed = self.write_loc_files(j)
                 k = np.abs(k)+1
                 k = k*(-1)**k #alt looking before and after index for a good file
                 if abs(k) > 10: #max out out on 5 each way
@@ -179,13 +199,14 @@ class grab_gong:
 
 
 
-def main(start,end,nproc=4,typ='fits',verbose=False,cad=120,
+def main(start,end,nproc=4,typ='fits',verbose=False,local=False,cad=120,
          larc='/Volumes/Pegasus/jprchlik/projects/ha_filaments/gong'):
     """Main loop of program. It is written to send information to grab_gong class.
        The program requires the start and end times be python datetime objects. 
        The optional inputs are as follows: nproc is the number of processors to use while downloading (default = 4, deprecated),
        typ is the type of file to download from the ftp server (default = 'fits'),
        verbose is present but not well implemented,
+       local is a boolean to use only already downloaded Halpha files use local = True
        cad is the cadence to download (default = 120 minutes, so download only 1 file per 120 minutes),
        larc is the local archive directory location (default = /Volumes/Pegasus/jprchlik/projects/ha_filaments/gong)""" 
        
@@ -213,7 +234,7 @@ def main(start,end,nproc=4,typ='fits',verbose=False,cad=120,
     ftpdir = 'HA/{0}'.format(typdic[typ])
     ftp.cwd(ftpdir)
     try:
-        test = grab_gong(start,end,ftp,arcdir,nproc,cad,verbose)
+        test = grab_gong(start,end,ftp,arcdir,nproc,cad,verbose,local)
 #close ftp when finished
         ftp.close()
 #return variable class which includes the all important file list
