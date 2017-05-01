@@ -24,9 +24,12 @@ def create_images(i):
 #start = datetime.strptime('2013/01/00T00:00:00',fmt)
 #end = datetime.strptime('2013/01/31T23:59:59',fmt)
 
-pickled = os.path.isfile('../init_data/FITracked_3yr.pic')
+infile = '../init_data/FITracked_3yr.pic'
+infile = 'concatentated_3yr_file.pic'
+
+pickled = os.path.isfile(infile)
 if pickled:#use pickle file if it already exits
-    dat = pd.read_pickle('../init_data/FITracked_3yr.pic')
+    dat = pd.read_pickle(infile)
 else: #create pickle file if doesnt exist
     infile = '../init_data/FITracked_3yr.txt'
     #dat = ascii.read('../init_data/FITracked_3yr.txt',delimiter='\t',guess=False)
@@ -78,6 +81,6 @@ pool.close()
 
 os.chdir(rdir)
 #create movie from image files
-imov = make_movie.create_movie(w0=2048,h0=2048,nproc=4,outmov='halpha_filament_movie_test.mp4')
+imov = make_movie.create_movie(w0=2048,h0=2048,nproc=4,outmov='halpha_filament_movie_recat.mp4')
 imov.create_movie()
 
