@@ -95,7 +95,7 @@ class halpha_plot:
 
         Returns
         -------
-        None
+        self
        
         """
     

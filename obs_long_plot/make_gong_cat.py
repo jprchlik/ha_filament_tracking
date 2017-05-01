@@ -7,9 +7,9 @@ import pandas as pd
 from multiprocessing import Pool
 from create_plots import halpha_plot
 import os
-def get_best_track(start,end):
+def get_best_track(start,end,local=False):
     #make sure files exist locally and output filenames
-    flist = grab_gong.main(start,end).filelist
+    flist = grab_gong.main(start,end,local=local).filelist
     return flist
     
 def create_images(i):
@@ -70,7 +70,7 @@ oend   = datetime.strptime(end,dfmt)
 rdir = os.getcwd() #return to current working directory before making movie
 
 print 'STARTING DOWNLOAD'
-flist = get_best_track(ostart,oend)
+flist = get_best_track(ostart,oend,local=True)
 
 os.chdir(rdir)
 #do in parallel 
