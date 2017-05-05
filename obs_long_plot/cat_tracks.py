@@ -1,4 +1,5 @@
 import create_plots as cp
+#from descartes import PolygonPatch
 from sunpy.sun import solar_semidiameter_angular_size
 import matplotlib.pyplot as plt
 import numpy as np
@@ -58,7 +59,7 @@ else: #create pickle file if doesnt exist
 
 
 #testing purposes
-#dat = dat[0:100]
+#dat = dat[0:10]
 
 #ha = cp.halpha_plot(dat,'dummy','dummy')
 
@@ -145,15 +146,27 @@ for i in uniqlist:
       
              poly1 = Polygon(c1fmt)
              poly2 = Polygon(c2fmt)
-
+#get the shape of the intersections
+             try:
+                 poly3 = poly1.intersection(poly2)
+                 #fractional area overlap
+                 a1r = poly3.area/poly1.area 
+                 a2r = poly3.area/poly2.area
+                 print 'Area overlap with Prim = {0:4.3f}, with Sec = {1:4.3f}'.format(a1r,a2r)
+             except ValueError:
+                 print 'Could not calculate overlap'
+                 continue
 #dummy test plotting
 #             fig, ax =plt.subplots()
 #             ax.plot(t12posx,t12posy,color='blue')
 #             ax.plot(t2posx,t2posy,color='red')
 #             fig.savefig('test_track_{0:1d}_w_track_{1:1d}.png'.format(i,j))
             
-    
-             if poly1.intersects(poly2):
+ 
+#Switching to intersecting shape   
+##             if poly1.intersects(poly2):
+             alimit = .10 #must contain 10% of the area in intersection
+             if ((a1r > alimit) | (a2r > alimit)):
                  #replace track number
                  print 'Match with track = {0:4d}'.format(dat['track_id'].values[j])
                  replace, = np.where(dat['track_id'].values == dat['track_id'].values[j])
@@ -166,4 +179,4 @@ for i in uniqlist:
 
     ii += 1 #increment at end of loop
 
-dat.to_pickle('concatentated_3yr_file.pic')
+dat.to_pickle('concatentated_per_shape_3yr_file.pic')
