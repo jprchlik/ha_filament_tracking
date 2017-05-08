@@ -71,7 +71,7 @@ class halpha_plot:
 
         return corarra[:,0],corarra[:,1]
 
-    def plot_rotation(self,start,coor,dh=0,color='red',linestyle='-',alpha=0.5):
+    def plot_rotation(self,start,coor,dh=0,color='red',linestyle='-',alpha=0.5,ids=None):
         """
         plot_rotation overplots a h alpha filament track accounting for solar roation
 
@@ -107,6 +107,7 @@ class halpha_plot:
     
     
         self.ax.plot(stopx,stopy,linestyle=linestyle,color=color,zorder=500,alpha=alpha)
+        self.ax.text(np.mean(stopx),np.max(stopy),str(ids),alpha=.5,color=color)
     #    ax.text(meanx,meany,'{0:6d}'.format(tid),color=color,fontsize=8)
     
     def plot_filament_track(self):
@@ -132,7 +133,8 @@ class halpha_plot:
     #get start time of track for filename
 #        ofname = '{0}_track{1:6d}'.format(dat['event_starttime'][good[0]],i).replace(' ','0').replace(':','_')
         self.ofile = self.ifile.split('/')[-1].replace('fits.fz','png')
-        try:
+#        try:
+        if True:
             sun = pyfits.open(self.ifile)
         # observed time of GONG halpha image
             self.stop = datetime.datetime.strptime(self.ofile[:-6],'%Y%m%d%H%M%S')
@@ -181,15 +183,16 @@ class halpha_plot:
     #        ax.add_patch(rs)
     
         
-        #plot track polygons for given id
-            for j in good:
-                inc = 'red'
-                if self.dat['obs_observatory'].values[j] == 'HA2': inc='blue'
-                poly = plt.Polygon(loads(self.dat['hpc_bbox'].values[j]).exterior,color=inc,linewidth=0.5,fill=None)
-                self.ax.add_patch(poly)
-                xx, yy = self.calc_poly_values(self.dat['hpc_bbox'].values[j])
-                self.ax.text(np.mean(xx),np.max(yy),self.dat['track_id'].values[j],alpha=.5,color=inc)
-    
+#remove identifying plot
+########        #plot track polygons for given id
+########            for j in good:
+########                inc = 'red'
+########                if self.dat['obs_observatory'].values[j] == 'HA2': inc='blue'
+########                poly = plt.Polygon(loads(self.dat['hpc_bbox'].values[j]).exterior,color=inc,linewidth=0.5,fill=None)
+########                self.ax.add_patch(poly)
+########                xx, yy = self.calc_poly_values(self.dat['hpc_bbox'].values[j])
+########                self.ax.text(np.mean(xx),np.max(yy),self.dat['track_id'].values[j],alpha=.5,color=inc)
+########    
     #list of track ids
             ltid = np.unique(self.dat['track_id'].values[good])
     
@@ -197,15 +200,20 @@ class halpha_plot:
             for tid in ltid:
             #over plot rotation track
                 idmatch, = np.where(self.dat['track_id'].values == tid)
-                if idmatch.size > 1:
-             #array of time differences between obs and filament track
-                    td = np.abs(self.dat['event_starttime_dt'][idmatch]-self.stop)
-                    nearest, = np.where(td == td.min())
-                    roplot = idmatch[nearest][0] #nearest filament trace in time
-                else: 
-                    roplot = idmatch[0]
+                td = np.abs(self.dat['event_starttime_dt'][idmatch]-self.stop)
+                nearest,= np.where(td == td.min())
+                roplot = idmatch[nearest]
+              ####  if idmatch.size < -100:
+             #####array of time differences between obs and filament track
+              ####      td = np.abs(self.dat['event_starttime_dt'][idmatch]-self.stop)
+              ####      nearest, = np.where(td == td.min())
+              ####      roplot = idmatch[nearest]#[0] #nearest filament trace in time
+              ####  else: 
+              ####      roplot = idmatch[0]
+            
+                roplot= roplot.tolist()
         #plot rotation of nearest filament placement
-                self.plot_rotation(self.dat['event_starttime_dt'][roplot],self.dat['hpc_bbox'].values[roplot],color='green')
+                for k in roplot: self.plot_rotation(self.dat['event_starttime_dt'][k],self.dat['hpc_bbox'].values[k],color='green',ids=self.dat['track_id'].values[k])
         
         
         #Setup plots
@@ -225,5 +233,5 @@ class halpha_plot:
             self.fig.clear()
             plt.close()
     
-        except:
-            print 'Unable to create image'
+#        except:
+#            print 'Unable to create image'
