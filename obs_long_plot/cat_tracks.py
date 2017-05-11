@@ -153,7 +153,7 @@ for i in uniqlist:
                  a1r = poly3.area/poly1.area 
                  a2r = poly3.area/poly2.area
                  print 'Area overlap with Prim = {0:4.3f}, with Sec = {1:4.3f}'.format(a1r,a2r)
-             except ValueError:
+             except:
                  print 'Could not calculate overlap'
                  continue
 #dummy test plotting
