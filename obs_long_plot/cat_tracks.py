@@ -59,7 +59,7 @@ else: #create pickle file if doesnt exist
 
 
 #testing purposes
-#dat = dat[0:10]
+dat = dat[0:10]
 
 #ha = cp.halpha_plot(dat,'dummy','dummy')
 
@@ -112,7 +112,7 @@ for i in uniqlist:
         dismag = np.sqrt((t1posx.max()-t1posx.min())**2+(t1posy.max()-t1posy.min())**2)
     #conditions to check for possible intersection
         c1t = dat['event_starttime_dt'].values > t1str #The time is greater than
-        c2x = dat['meanx'] > t1meanx #the x position is greater than the x position of the first filament
+        c2x = dat['meanx'] > t1meanx-10. #the x position is greater than the x position of the first filament with a 10arcsec pad (approximately an hour)
         c3y = np.abs(dat['meany']-t1meany) < dismag #mean y value has not change more than the magniutde of the polygon
         c4t = dat['event_starttime_dt'].values < np.datetime64(maxt) #time not beyond when filament is on limb
         c5i = dat['track_id'].values != i #it is not already a part of the same track
@@ -125,11 +125,14 @@ for i in uniqlist:
     #    print np.where(c3y)
     #    print np.where(c4t)
     #    print np.where(c5i)
-        possm, = np.where((c1t) & (c2x) & (c3y) & (c4t) & (c5i)) 
+        #cut track to try and match
+        possm, = np.where((c1t) & (c2x) & (c3y) & (c4t))# & (c5i)) 
+
     
         for j in possm:
              t232b = datetime.utcfromtimestamp(dat['event_starttime_dt'].values[j].tolist()/1e9) #covert to datetime object
              t12posx, t12posy =  solar_rotation.rot_hpc(t1posx*u.arcsec,t1posy*u.arcsec,t132b,t232b,rot_type=rot_type) #current position rotated to future time
+
     
              #remove units
              t12posx, t12posy = t12posx.value, t12posy.value 
@@ -142,16 +145,29 @@ for i in uniqlist:
     #convert coordinates to format for shapely readin
              c1fmt = [(t12posx[p],t12posy[p]) for p in range(len(t12posy))]
              c2fmt = [(t2posx[p],t2posy[p]) for p in range(len(t2posy))]
+
     
       
              poly1 = Polygon(c1fmt)
              poly2 = Polygon(c2fmt)
+
+             #increase the "real" filament size by 20% to find near neighbors 
+             scale = 1.2
+             bound = np.array(poly1.boundary.xy).T
+             point = np.array(poly1.representative_point().xy).T
+             polyb = Polygon(scale*(bound-point))
+             offst = point-np.array(polyb.representative_point().xy).T
+             print offst
+             polyb = Polygon(scale*(bound-point)+offst)
+            
 #get the shape of the intersections
              try:
-                 poly3 = poly1.intersection(poly2)
+                 #use the large shape for area intersection
+                 poly3 = polyb.intersection(poly2)
                  #fractional area overlap
                  a1r = poly3.area/poly1.area 
                  a2r = poly3.area/poly2.area
+                 print 'Area enlargement = {0:5.4f}'.format(polyb.area/poly1.area)
                  print 'Area overlap with Prim = {0:4.3f}, with Sec = {1:4.3f}'.format(a1r,a2r)
              except:
                  print 'Could not calculate overlap'
@@ -179,4 +195,4 @@ for i in uniqlist:
 
     ii += 1 #increment at end of loop
 
-dat.to_pickle('concatentated_per_shape_3yr_file.pic')
+dat.to_pickle('concatentated_per_enlarged_shape_3yr_file.pic')
