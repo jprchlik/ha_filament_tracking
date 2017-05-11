@@ -133,8 +133,7 @@ class halpha_plot:
     #get start time of track for filename
 #        ofname = '{0}_track{1:6d}'.format(dat['event_starttime'][good[0]],i).replace(' ','0').replace(':','_')
         self.ofile = self.ifile.split('/')[-1].replace('fits.fz','png')
-#        try:
-        if True:
+        try:
             sun = pyfits.open(self.ifile)
         # observed time of GONG halpha image
             self.stop = datetime.datetime.strptime(self.ofile[:-6],'%Y%m%d%H%M%S')
@@ -233,5 +232,5 @@ class halpha_plot:
             self.fig.clear()
             plt.close()
     
-#        except:
-#            print 'Unable to create image'
+        except:
+            print 'Unable to create image'
