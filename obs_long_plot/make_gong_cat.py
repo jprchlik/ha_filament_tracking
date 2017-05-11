@@ -25,7 +25,7 @@ def create_images(i):
 #end = datetime.strptime('2013/01/31T23:59:59',fmt)
 
 infile = '../init_data/FITracked_3yr.pic'
-infile = 'concatentated_3yr_file.pic'
+infile = 'concatentated_per_shape_3yr_file.pic'
 
 pickled = os.path.isfile(infile)
 if pickled:#use pickle file if it already exits
@@ -74,6 +74,7 @@ flist = get_best_track(ostart,oend,local=True)
 
 os.chdir(rdir)
 #do in parallel 
+#for mm in flist: create_images(mm)
 pool =Pool(processes=nproc)
 out = pool.map(create_images,flist)
 pool.close()
@@ -81,6 +82,6 @@ pool.close()
 
 os.chdir(rdir)
 #create movie from image files
-imov = make_movie.create_movie(w0=2048,h0=2048,nproc=4,outmov='halpha_filament_movie_recat.mp4')
+imov = make_movie.create_movie(w0=2048,h0=2048,nproc=4,outmov='halpha_filament_movie_per_shape.mp4')
 imov.create_movie()
 
