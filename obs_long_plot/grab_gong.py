@@ -125,7 +125,7 @@ class grab_gong:
         
             k = 0
             while failed:
-                p = m+k #jump back and forth until a file passes inspection 
+                m = p+k #jump back and forth until a file passes inspection 
                 j = templist[m] # get the index corresponding to the closest time
                 i = timelist[m]
 
