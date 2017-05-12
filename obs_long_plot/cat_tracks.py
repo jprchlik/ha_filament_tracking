@@ -1,11 +1,12 @@
 import create_plots as cp
+import make_gong_cat
 #from descartes import PolygonPatch
 from sunpy.sun import solar_semidiameter_angular_size
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
-from shapely.geometry import Polygon,MultiPoint
+from shapely.geometry import Polygon,MultiPoint,LineString
 import astropy.units as u
 from sunpy.physics import solar_rotation
 from datetime import datetime,timedelta
@@ -148,21 +149,24 @@ for i in uniqlist:
 
     
       
-             poly1 = Polygon(c1fmt)
-             poly2 = Polygon(c2fmt)
 
              #increase the "real" filament size by 20% to find near neighbors 
-             scale = 1.2
-             bound = np.array(poly1.boundary.xy).T
-             point = np.array(poly1.representative_point().xy).T
-             polyb = Polygon(scale*(bound-point))
-             offst = point-np.array(polyb.representative_point().xy).T
-             print offst
-             polyb = Polygon(scale*(bound-point)+offst)
+             scale = 3.0 
+#             scale = 1.2
+#             bound = np.array(poly1.boundary.xy).T
+#             point = np.array(poly1.representative_point().xy).T
+#             polyb = Polygon(scale*(bound-point))
+#             offst = point-np.array(polyb.representative_point().xy).T
+#             print offst
+#             polyb = Polygon(scale*(bound-point)+offst)
             
 #get the shape of the intersections
              try:
+                 poly1 = Polygon(c1fmt)
+                 polyl = LineString(c1fmt)
+                 poly2 = Polygon(c2fmt)
                  #use the large shape for area intersection
+                 polyb = Polygon(polyl.parallel_offset(scale,'right',join_style=1)) # draw a 20% larger round polygon
                  poly3 = polyb.intersection(poly2)
                  #fractional area overlap
                  a1r = poly3.area/poly1.area 
@@ -173,15 +177,16 @@ for i in uniqlist:
                  print 'Could not calculate overlap'
                  continue
 #dummy test plotting
-#             fig, ax =plt.subplots()
-#             ax.plot(t12posx,t12posy,color='blue')
-#             ax.plot(t2posx,t2posy,color='red')
-#             fig.savefig('test_track_{0:1d}_w_track_{1:1d}.png'.format(i,j))
+             fig, ax =plt.subplots()
+             ax.plot(t12posx,t12posy,color='blue')
+             ax.plot(t2posx,t2posy,color='red')
+             ax.plot(np.array(polyb.boundary.xy)[0],np.array(polyb.boundary.xy)[1],color='green')
+             fig.savefig('test_track_{0:1d}_w_track_{1:1d}.png'.format(i,j))
             
  
 #Switching to intersecting shape   
 ##             if poly1.intersects(poly2):
-             alimit = .10 #must contain 10% of the area in intersection
+             alimit = 0.05 #must contain 10% of the area in intersection
              if ((a1r > alimit) | (a2r > alimit)):
                  #replace track number
                  print 'Match with track = {0:4d}'.format(dat['track_id'].values[j])
@@ -195,4 +200,7 @@ for i in uniqlist:
 
     ii += 1 #increment at end of loop
 
-dat.to_pickle('concatentated_per_enlarged_shape_3yr_file.pic')
+outf = 'concatentated_per_enlarged_shape_3yr_file.pic'
+dat.to_pickle(outf)
+
+make_gong_cat.main(outf,'filament_tracking_enlarged_5_per.mp4',end='2012-01-02T00:00:00')
