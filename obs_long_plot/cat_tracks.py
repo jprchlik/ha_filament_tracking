@@ -60,7 +60,7 @@ else: #create pickle file if doesnt exist
 
 
 #testing purposes
-dat = dat[0:10]
+#dat = dat[0:10]
 
 #ha = cp.halpha_plot(dat,'dummy','dummy')
 
@@ -127,7 +127,7 @@ for i in uniqlist:
     #    print np.where(c4t)
     #    print np.where(c5i)
         #cut track to try and match
-        possm, = np.where((c1t) & (c2x) & (c3y) & (c4t))# & (c5i)) 
+        possm, = np.where((c1t) & (c2x) & (c3y) & (c4t) & (c5i)) 
 
     
         for j in possm:
@@ -177,11 +177,11 @@ for i in uniqlist:
                  print 'Could not calculate overlap'
                  continue
 #dummy test plotting
-             fig, ax =plt.subplots()
-             ax.plot(t12posx,t12posy,color='blue')
-             ax.plot(t2posx,t2posy,color='red')
-             ax.plot(np.array(polyb.boundary.xy)[0],np.array(polyb.boundary.xy)[1],color='green')
-             fig.savefig('test_track_{0:1d}_w_track_{1:1d}.png'.format(i,j))
+            ## fig, ax =plt.subplots()
+            ## ax.plot(t12posx,t12posy,color='blue')
+            ## ax.plot(t2posx,t2posy,color='red')
+            ## ax.plot(np.array(polyb.boundary.xy)[0],np.array(polyb.boundary.xy)[1],color='green')
+            ## fig.savefig('test_track_{0:1d}_w_track_{1:1d}.png'.format(i,j))
             
  
 #Switching to intersecting shape   
