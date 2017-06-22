@@ -186,7 +186,7 @@ for i in uniqlist:
  
 #Switching to intersecting shape   
 ##             if poly1.intersects(poly2):
-             alimit = 0.05 #must contain 10% of the area in intersection
+             alimit = 0.05 #must contain 5% of the area in intersection
              if ((a1r > alimit) | (a2r > alimit)):
                  #replace track number
                  print 'Match with track = {0:4d}'.format(dat['track_id'].values[j])
@@ -203,4 +203,4 @@ for i in uniqlist:
 outf = 'concatentated_per_enlarged_shape_3yr_file.pic'
 dat.to_pickle(outf)
 
-make_gong_cat.main(outf,'filament_tracking_enlarged_5_per.mp4',end='2012-01-02T00:00:00')
+make_gong_cat.main(outf,'filament_tracking_enlarged_5_per.mp4')
