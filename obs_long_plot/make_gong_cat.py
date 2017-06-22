@@ -13,8 +13,8 @@ def get_best_track(start,end,local=False):
     return flist
     
 def create_images(i):
-    global dat
-    out = halpha_plot(dat,i,pdir)
+    global dat,pdir,lref
+    out = halpha_plot(dat,i,pdir,lref=lref)
     out.plot_filament_track()
     
 
@@ -25,7 +25,9 @@ def create_images(i):
 #start = datetime.strptime('2013/01/00T00:00:00',fmt)
 #end = datetime.strptime('2013/01/31T23:59:59',fmt)
 
-def main(infile,outmov,start='2012-01-01T00:00:00',end='2014-12-01T00:00:00',dfmt = '%Y-%m-%dT%H:%M:%S'):
+def main(infile,outmov,start='2012-01-01T00:00:00',end='2014-12-01T00:00:00',dfmt = '%Y-%m-%dT%H:%M:%S',inlref=False):
+    global dat,pdir,lref
+    lref = inlref
     pickled = os.path.isfile(infile)
     if pickled:#use pickle file if it already exits
         dat = pd.read_pickle(infile)
