@@ -1,7 +1,9 @@
 import matplotlib
+import sys
 matplotlib.rc('font',size=24) #fix multiprocessing issue
 matplotlib.use('agg')
 import shapely 
+import numpy as np
 import matplotlib.pyplot as plt
 from shapely.wkt  import dumps, loads
 from matplotlib.patches import *
@@ -16,7 +18,7 @@ class halpha_plot:
     """ A class which creates an image from an input file.
         Currently used to create H alpha GONG images."""
 
-    def __init__(self,dat,ifile,pdir):
+    def __init__(self,dat,ifile,pdir,lref=False):
         """Initializes variables to be used by the halpha_plot class.
 
            This function just creates the object to be class later.
@@ -29,6 +31,8 @@ class halpha_plot:
               ifile is the input GONG H alpha file
            pdir : string
               pdir is a string which points to the directory for plotting
+           lref
+              reference line for good tracks to match with filament (40 degrees)
          
            Returns
            -------
@@ -38,7 +42,28 @@ class halpha_plot:
         self.dat = dat
         self.ifile = ifile
         self.pdir = pdir
+        self.lref = lref
 
+    def draw_lines(self):
+        """
+           Draw a line at 40 degrees latitude 
+           Parameters
+           ----------
+           self
+
+           Returns
+           -------
+           None
+        """
+        r = self.asr.value
+        y = 400.
+        x = (r**2-y**2)**(.5)
+        xs = np.linspace(-x,x,10)
+        yt = np.zeros(xs.size)+y
+        yb = np.zeros(xs.size)-y
+        self.ax.plot(xs,yt,'-.',color='red',alpha=.2,linewidth=5,zorder=5000)
+        self.ax.plot(xs,yb,'-.',color='red',alpha=.2,linewidth=5,zorder=5000)
+        
 
   
     def calc_poly_values(self,coor):
@@ -156,10 +181,10 @@ class halpha_plot:
     #            asr = solar_semidiameter_angular_size(self.dat['event_starttime'].values[good[0]])
     #        except:
     #            asr = solar_semidiameter_angular_size(self.dat['event_starttime'].values[good])
-            asr = solar_semidiameter_angular_size(self.stop.strftime('%Y/%m/%d %H:%M:%S'))
+            self.asr = solar_semidiameter_angular_size(self.stop.strftime('%Y/%m/%d %H:%M:%S'))
     
     #store the scale factor
-            sf = asr.value/900.
+            sf = self.asr.value/900.
       
             sx, sy = np.shape(sundat)
         #get tracks visible on the surface using a given time frame
@@ -180,6 +205,7 @@ class halpha_plot:
             self.ax.text(sf*x0+poff*sf*(dx*sx-x0),sf*y0+poff*sf*(dy*sy-y0),sun[1].header['DATE-OBS'],color='white',fontsize=38,fontweight='bold')
     #        rs = plt.Circle((0.,0.),radius=1000.,color='gray',fill=False,linewidth=5,zorder=0)
     #        ax.add_patch(rs)
+            if self.lref: self.draw_lines()
     
         
 #remove identifying plot
@@ -234,3 +260,4 @@ class halpha_plot:
     
         except:
             print 'Unable to create image'
+            print sys.exc_info()
