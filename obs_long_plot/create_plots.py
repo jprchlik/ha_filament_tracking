@@ -56,7 +56,7 @@ class halpha_plot:
            None
         """
         r = self.asr.value
-        y = 400.
+        y = 620.
         x = (r**2-y**2)**(.5)
         xs = np.linspace(-x,x,10)
         yt = np.zeros(xs.size)+y
