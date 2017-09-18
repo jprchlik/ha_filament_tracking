@@ -56,13 +56,13 @@ class halpha_plot:
            None
         """
         r = self.asr.value
-        y = 620.
+        y = 475.
         x = (r**2-y**2)**(.5)
         xs = np.linspace(-x,x,10)
         yt = np.zeros(xs.size)+y
         yb = np.zeros(xs.size)-y
-        self.ax.plot(xs,yt,'-.',color='red',alpha=.2,linewidth=5,zorder=5000)
-        self.ax.plot(xs,yb,'-.',color='red',alpha=.2,linewidth=5,zorder=5000)
+        self.ax.plot(xs,yt,'-.',color='red',alpha=1.,linewidth=5,zorder=5000)
+        self.ax.plot(xs,yb,'-.',color='red',alpha=1.,linewidth=5,zorder=5000)
         
 
   
@@ -96,7 +96,7 @@ class halpha_plot:
 
         return corarra[:,0],corarra[:,1]
 
-    def plot_rotation(self,start,coor,dh=0,color='red',linestyle='-',alpha=0.5,ids=None):
+    def plot_rotation(self,start,coor,dh=0,color='teal',linestyle='-',alpha=1.0,ids=None):
         """
         plot_rotation overplots a h alpha filament track accounting for solar roation
 
@@ -131,8 +131,8 @@ class halpha_plot:
         stopx, stopy = stopx.value, stopy.value
     
     
-        self.ax.plot(stopx,stopy,linestyle=linestyle,color=color,zorder=500,alpha=alpha)
-        self.ax.text(np.mean(stopx),np.max(stopy),str(ids),alpha=.5,color=color)
+        self.ax.plot(stopx,stopy,linestyle=linestyle,color=color,zorder=500,alpha=alpha,linewidth=3)
+        self.ax.text(np.mean(stopx),np.max(stopy),str(ids),alpha=1.,color=color,fontweight='bold')
     #    ax.text(meanx,meany,'{0:6d}'.format(tid),color=color,fontsize=8)
     
     def plot_filament_track(self):
@@ -238,7 +238,7 @@ class halpha_plot:
             
                 roplot= roplot.tolist()
         #plot rotation of nearest filament placement
-                for k in roplot: self.plot_rotation(self.dat['event_starttime_dt'][k],self.dat['hpc_bbox'].values[k],color='green',ids=self.dat['track_id'].values[k])
+                for k in roplot: self.plot_rotation(self.dat['event_starttime_dt'][k],self.dat['hpc_bbox'].values[k],color='teal',ids=self.dat['track_id'].values[k])
         
         
         #Setup plots
