@@ -25,6 +25,12 @@ def setup_dis(x,col='med_tilt'):
     return x
 
 
+#sampling frequency 
+sam = '4W'
+#get pandas timeseries representation for filament tracking code time range
+rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
+
+#read in filament categories given in Brianna's code
 fil = pd.read_pickle('filament_catagories.pic')
 
 fil_dict = {}
@@ -68,6 +74,7 @@ for j,i in enumerate(fil_keys):
     d[0] = d[0][~d[0].index.duplicated(keep='first')]
 
     d[0].set_index(d[0]['event_starttime_dt'],inplace=True)
+    d[0].sort_index(inplace=True)
 
     n = d[0][d[0].north == 1]
     s = d[0][d[0].north == 0]
@@ -75,7 +82,9 @@ for j,i in enumerate(fil_keys):
     n = setup_dis(n)
     s = setup_dis(s)
     n.set_index(n['event_starttime_dt'],inplace=True)
+    n.sort_index(inplace=True)
     s.set_index(s['event_starttime_dt'],inplace=True)
+    s.sort_index(inplace=True)
 
 
     #two sample anderson-darling test between n and s of same catagory 
@@ -119,10 +128,12 @@ for j,i in enumerate(fil_keys):
         #setup d3 and d4 distributions for comparision
         d3 = fil_dict['fil3'][0]
         d3.set_index(d3['track_id'],inplace='true')
+        d3.sort_index(inplace=True)
         d3 = d3[~d3.index.duplicated(keep='first')]
 
         d4 = fil_dict['fil4'][0]
         d4.set_index(d4['track_id'],inplace='true')
+        d4.sort_index(inplace=True)
         d4 = d4[~d4.index.duplicated(keep='first')]
 
         #break d3 and d4 into frames of north and south
@@ -154,6 +165,7 @@ for j,i in enumerate(fil_keys):
 #get person r value for ax4[0] (north) and ax4[1] (south)
 allf = fil_dict['allf'][0]
 allf.set_index(allf['event_starttime_dt'],inplace=True)
+allf.sort_index(inplace=True)
    
 
 npp = stats.pearsonr(allf[allf.north == 1].med_tilt.values,allf[allf.north == 1].med_y.values)
@@ -175,19 +187,21 @@ for j,i in enumerate(tilt_time):
     #get unique indices 
     allf = allf[~allf.index.duplicated(keep='first')]
     allf.set_index(allf['event_starttime_dt'],inplace=True)
+    allf.sort_index(inplace=True)
+
     #split into noth and south
     #http://benalexkeen.com/resampling-time-series-data-with-pandas/
     #get running mean
     bn = allf[allf.north == 1]
     bs = allf[allf.north == 0]
-    mbn = bn.resample('4W').mean()
-    mbs = bs.resample('4W').mean()
+    mbn = bn.resample('4W').mean().reindex(index=rng,fill_value=0)
+    mbs = bs.resample('4W').mean().reindex(index=rng,fill_value=0)
     #get running standard deviation
-    sbn = bn.resample('4W').std()
-    sbs = bs.resample('4W').std()
+    sbn = bn.resample('4W').std().reindex(index=rng,fill_value=0)
+    sbs = bs.resample('4W').std().reindex(index=rng,fill_value=0)
     #get running count
-    cbn = bn.resample('4W').count()
-    cbs = bs.resample('4W').count()
+    cbn = bn.resample('4W').count().reindex(index=rng,fill_value=0)
+    cbs = bs.resample('4W').count().reindex(index=rng,fill_value=0)
     
     #plot running mean
     ax3[j].errorbar(mbn.index,mbn.med_tilt,xerr=timedelta(days=14),yerr=sbn.med_tilt.values/np.sqrt(cbn.med_tilt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean (4W)')
@@ -206,6 +220,7 @@ for j,i in enumerate(tilt_time):
 fi_er = pd.read_pickle('filament_eruptions/query_output/all_fe_20120101-20141130.pic')
 fi_er['events'] = 1
 #get only one instance per event
+fi_er.sort_index(inplace=True)
 fi_er = fi_er[~fi_er.index.duplicated(keep='first')]
 
 
@@ -215,8 +230,8 @@ s_er = fi_er[fi_er.hpc_y < 0.]
 
 
 #bin up in 4W bins 
-bn_er = n_er.resample('4W').sum()
-bs_er = s_er.resample('4W').sum()
+bn_er = n_er.resample('4W').sum().reindex(index=rng,fill_value=0)
+bs_er = s_er.resample('4W').sum().reindex(index=rng,fill_value=0)
 
 #plot run N/S total 
 ax3[3].errorbar(bn_er.index,bn_er.events,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='o',color='red',label='Northern (4W)')
