@@ -5,6 +5,9 @@ mpl.rcParams['font.weight'] = 'bold'
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['font.sans-serif'] = 'Helvetica'
 mpl.rcParams['font.size'] = 24
+
+
+
 import matplotlib.pyplot as plt
 from fancy_plot import fancy_plot
 import pandas as pd
@@ -40,7 +43,6 @@ fil_dict['allf'] = [fil[fil.cat_id != 0],'blue' ,'D',':' ,"All Filaments"]
 fig, ax = plt.subplots(ncols=2,figsize=(11,8.5))
 fig1, ax1 = plt.subplots(figsize=(11.,8.5))
 fig2, ax2 = plt.subplots(figsize=(13.,17.),ncols=2,nrows=2)
-fig3, ax3 = plt.subplots(figsize=(33.,8.5))
 fig4, ax4 = plt.subplots(nrows=2,figsize=(8.5,11),sharex=True)
 fig5, ax5 = plt.subplots(ncols=2,figsize=(11,8.5))
 ax2 = ax2.ravel()
@@ -150,10 +152,8 @@ for j,i in enumerate(fil_keys):
 
 
 #get person r value for ax4[0] (north) and ax4[1] (south)
-allf = fil_dict['fil4'][0]
+allf = fil_dict['allf'][0]
 allf.set_index(allf['event_starttime_dt'],inplace=True)
-bn = allf[allf.north == 1]
-bs = allf[allf.north == 0]
    
 
 npp = stats.pearsonr(allf[allf.north == 1].med_tilt.values,allf[allf.north == 1].med_y.values)
@@ -161,25 +161,70 @@ spp = stats.pearsonr(allf[allf.north == 0].med_tilt.values,allf[allf.north == 0]
 ax4[0].text(-90,200,'r={0:4.3f},p={0:4.3f}'.format(*npp),fontsize=12)
 ax4[1].text(-90,-200,'r={0:4.3f},p={0:4.3f}'.format(*spp),fontsize=12)
 
+#plotting 1and 2, 3, and 4 versus time
+fig3, ax3 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig3.subplots_adjust(hspace=0.001,wspace=0.001)
 
-#http://benalexkeen.com/resampling-time-series-data-with-pandas/
-#get running mean
-mbn = bn.resample('4W').mean()
-mbs = bs.resample('4W').mean()
-#get running mean
-sbn = bn.resample('4W').std()
-sbs = bs.resample('4W').std()
-#get running count
-cbn = bn.resample('4W').count()
-cbs = bs.resample('4W').count()
+#array of filament objects
+tilt_time = ['fil12','fil3','fil4']
 
-#plot running mean
-ax3.errorbar(mbn.index,mbn.med_tilt,xerr=timedelta(days=14),yerr=sbn.med_tilt.values/np.sqrt(cbn.med_tilt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean (4W)')
-ax3.errorbar(mbs.index,mbs.med_tilt,xerr=timedelta(days=14),yerr=sbs.med_tilt.values/np.sqrt(cbs.med_tilt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean (4W)')
+for j,i in enumerate(tilt_time):
 
-#Make tilt versus time plot
-ax3.scatter(bn.index,bn.med_tilt,color='red',marker='o',label='Northern')
-ax3.scatter(bs.index,bs.med_tilt,color='black',marker='D',label='Southern')
+    allf = fil_dict[i][0]
+    allf.set_index(allf['track_id'],inplace=True)
+    #get unique indices 
+    allf = allf[~allf.index.duplicated(keep='first')]
+    allf.set_index(allf['event_starttime_dt'],inplace=True)
+    #split into noth and south
+    #http://benalexkeen.com/resampling-time-series-data-with-pandas/
+    #get running mean
+    bn = allf[allf.north == 1]
+    bs = allf[allf.north == 0]
+    mbn = bn.resample('4W').mean()
+    mbs = bs.resample('4W').mean()
+    #get running standard deviation
+    sbn = bn.resample('4W').std()
+    sbs = bs.resample('4W').std()
+    #get running count
+    cbn = bn.resample('4W').count()
+    cbs = bs.resample('4W').count()
+    
+    #plot running mean
+    ax3[j].errorbar(mbn.index,mbn.med_tilt,xerr=timedelta(days=14),yerr=sbn.med_tilt.values/np.sqrt(cbn.med_tilt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean (4W)')
+    ax3[j].errorbar(mbs.index,mbs.med_tilt,xerr=timedelta(days=14),yerr=sbs.med_tilt.values/np.sqrt(cbs.med_tilt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean (4W)')
+    
+    #Make tilt versus time plot
+    ax3[j].scatter(bn.index,bn.med_tilt,color='red',marker='o',label='Northern')
+    ax3[j].scatter(bs.index,bs.med_tilt,color='black',marker='D',label='Southern')
+
+    #Y title
+    ax3[j].set_ylabel("Med. Tilt [Deg.]\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2')))
+    fancy_plot(ax3[j])
+    ax3[j].set_ylim([-90.,90.])
+
+#Add number of eruptions to output
+fi_er = pd.read_pickle('filament_eruptions/query_output/all_fe_20120101-20141130.pic')
+fi_er['events'] = 1
+#get only one instance per event
+fi_er = fi_er[~fi_er.index.duplicated(keep='first')]
+
+
+n_er = fi_er[fi_er.hpc_y > 0.]
+s_er = fi_er[fi_er.hpc_y < 0.]
+
+
+
+#bin up in 4W bins 
+bn_er = n_er.resample('4W').sum()
+bs_er = s_er.resample('4W').sum()
+
+#plot run N/S total 
+ax3[3].errorbar(bn_er.index,bn_er.events,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='o',color='red',label='Northern (4W)')
+ax3[3].errorbar(bs_er.index,bs_er.events,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='D',color='black',label='Southern (4W)')
+ax3[3].set_ylabel('Number of Eruptions')
+fancy_plot(ax3[3])
+
+
 
 ax[1].set_yticklabels([])
 ax2[1].set_yticklabels([])
@@ -196,7 +241,7 @@ ax5[1].set_title('Southern')
 ax[0].set_xlabel('Med. Tilt [Deg.]')
 ax[1].set_xlabel('Med. Tilt [Deg.]')
 ax1.set_xlabel("Med. Centroid Lat. ['']")
-ax3.set_xlabel("Time")
+ax3[2].set_xlabel("Time")
 ax4[0].set_xlabel('Med. Tilt [Deg.]')
 ax4[1].set_xlabel('Med. Tilt [Deg.]')
 ax5[0].set_xlabel('Med. Tilt [Deg.]')
@@ -207,7 +252,6 @@ ax1.set_ylabel('Med. Tilt [Deg.]')
 ax1.set_ylabel('Tilt [Deg.]')
 ax2[0].set_ylabel('Cumulative Fraction')
 ax2[2].set_ylabel('Cumulative Fraction')
-ax3.set_ylabel("Med. Tilt [Deg.]")
 ax4[0].set_ylabel("Med. Centroid Lat. ['']")
 ax4[1].set_ylabel("Med. Centroid Lat. ['']")
 ax5[0].set_ylabel('Cumulative Fraction')
@@ -216,7 +260,6 @@ ax5[0].set_ylabel('Cumulative Fraction')
 fancy_plot(ax[0])
 fancy_plot(ax[1])
 fancy_plot(ax1)
-fancy_plot(ax3)
 fancy_plot(ax4[0])
 fancy_plot(ax4[1])
 fancy_plot(ax5[0])
@@ -226,13 +269,13 @@ fancy_plot(ax5[1])
 ax[0].legend(loc='upper left',frameon=False,fontsize=18)
 ax1.legend(loc='upper center',frameon=True ,handletextpad=-.112,scatterpoints=1,fontsize=18)
 ax2[0].legend(loc='upper left',frameon=False,fontsize=18)
-ax3.legend(loc='upper left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=18,handlelength=1)
+ax3[0].legend(loc='upper left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=18,handlelength=1)
 ax4[0].legend(loc='lower right',frameon=False,fontsize=18)
 ax5[0].legend(loc='upper left',frameon=False,fontsize=18)
 
 fig.savefig( 'plots/ns_cumla_dis_tilt.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig1.savefig('plots/med_tilt_v_med_lat.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig2.savefig('plots/ns_cat_cumla_dis_tilt.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
-fig3.savefig('plots/tilt_v_time.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig3.savefig('plots/tilt_v_time_w_fe.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig4.savefig('plots/ns_med_tilt_v_med_lat.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig5.savefig('plots/ns_cumla_dis_tilt_comb12.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
