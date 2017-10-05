@@ -25,9 +25,15 @@ bdir = "../obs_long_plot/"
 #fil=pd.read_pickle(bdir+filn)
 ### converts string coordinates to shapely objects
 fil['hpc_bbox'] = [loads(i) for i in fil['hpc_bbox'].values]
+
+
+#put in lat and log coorindates
+fil['meanx_hgs'] = 0
+fil['meany_hgs'] = 0
 #use centriod for meanx and meany values
 for j,i in enumerate(fil['hpc_bbox']):
     fil['meanx'][j],fil['meany'][j] =i.centroid.x,i.centroid.y 
+    fil['meanx_hgs'][j],fil['meany_hgs'][j] =sunpy.wcs.convert_hg_hpc(i.centroid.x,i.centroid.y)
 
 ###############################################################################
 ############## Creates plot of avg y value wrt # of tracks ####################
@@ -355,9 +361,15 @@ for x,y in enumerate(cav['start_date_dt']):
                 #filament is in same location as the cavity
                 ### make sure the filament occurs at the same latitude as the cavity
                 cav_pmat = fil['hpc_bbox'][i].intersects(cav_box)
+        
 
 
-                if ((goodtrack) & (cav_tmat) & (cav_pmat)):
+
+                #only include somewhat stable tracks in category 3
+                cav_inst = fil['num_inst'][i] > 5
+
+
+                if ((goodtrack) & (cav_tmat) & (cav_pmat) & (cav_inst)):
                     fil_list.append(fil['track_id'][i])     
                     fil['cat_id'][i] = 3
 
@@ -369,7 +381,7 @@ for x,y in enumerate(cav['start_date_dt']):
 for i,j in enumerate(fil['track_id']):
     ### if the filament intersects either the north or south rectangle, continue
     if fil['hpc_bbox'][i].intersects(n_rect) or fil['hpc_bbox'][i].intersects(s_rect):
-        ### only include filaments that have more than 3 instances in its track
+        ### only include filaments that have more than 5 instances in its track
         if fil['num_inst'][i] > 5:
             ### search dictionaries for filaments that do not correspond to a cavity
             if j not in [x1 for v1 in cat1.values() for x1 in v1] and j not in [x2 for v2 in cat2.values() for x2 in v2] and j not in [x3 for v3 in cat3.values() for x3 in v3]:
