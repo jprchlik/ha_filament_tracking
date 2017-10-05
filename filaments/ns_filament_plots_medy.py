@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from fancy_plot import fancy_plot
 import pandas as pd
 import numpy as np
+from datetime import datetime,timedelta
 
 import scipy.stats as stats
 import statsmodels.api as sm
@@ -20,6 +21,44 @@ def setup_dis(x,col='med_y'):
     x['dis']  = np.linspace(0.,1.,len(x))
     return x
 
+def real_resamp(x,dates,col='med_tilt'):
+
+    y = pd.DataFrame(index=dates)
+    y[col+'_mean'] = np.nan
+    y[col+'_med'] = np.nan
+    y[col+'_std'] = np.nan
+    y[col+'_sum'] = np.nan
+    y[col+'_cnt'] = np.nan
+   
+    #total number of dates
+    t = len(dates)
+
+    #return y
+
+    for j,i in enumerate(dates):
+
+        if j < t-2:
+            use, = np.where((x.index > i) & (x.index < dates[j+1]))
+        else:
+            use, = np.where(x.index > i)
+          
+        if use.size > 0:
+            y.loc[i,col+'_mean'] = np.mean(x[col].values[use])
+            y.loc[i,col+'_med']  = np.median(x[col].values[use])
+            y.loc[i,col+'_std']  = np.std(x[col].values[use])
+            y.loc[i,col+'_sum']  = np.sum(x[col].values[use])
+            y.loc[i,col+'_cnt']  = use.size
+
+    #Add time average time offset to days
+    #toff = x.index[1:]-x.index[:-1]
+    #x.index = x.index+toff/2.
+    y.index = y.index+pd.DateOffset(days=14)
+    return y
+
+#sampling frequency 
+sam = '4W'
+#get pandas timeseries representation for filament tracking code time range
+rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
 
 fil = pd.read_pickle('filament_catagories.pic')
 
@@ -34,11 +73,12 @@ fil_dict['fil12'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2))],'red'  ,'o','-
 fil_dict['fil3'] = [fil[fil.cat_id == 3],'teal' ,'s','-.',"Cat. 3"]
 fil_dict['fil4'] = [fil[fil.cat_id == 4],'blue' ,'D',':' ,"Cat. 4"]
 fil_dict['allf'] = [fil[fil.cat_id != 0],'blue' ,'D',':' ,"Cat. 4"]
+fil_dict['alll'] = [fil,'blue' ,'D',':' ,"Cat. 4"]
 
 
 fig, ax = plt.subplots(ncols=2,figsize=(11,8.5))
 fig2, ax2 = plt.subplots(figsize=(13.,17.),ncols=2,nrows=2)
-fig3, ax3 = plt.subplots(figsize=(33.,8.5))
+#fig3, ax3 = plt.subplots(figsize=(33.,8.5))
 fig5, ax5 = plt.subplots(ncols=2,figsize=(11,8.5))
 ax2 = ax2.ravel()
 fig.subplots_adjust(hspace=0.001,wspace=0.001)
@@ -47,7 +87,7 @@ fig5.subplots_adjust(hspace=0.001,wspace=0.001)
 
 
 #compare stable vs unstable filaments
-stab_keys = ['fil1','fil2','fil12','fil3','fil4','allf']
+stab_keys = ['fil1','fil2','fil12','fil3','fil4','allf','alll']
 for i in stab_keys: 
     d = fil_dict[i]
     d[0]['north'] = 0
@@ -80,7 +120,7 @@ for j,i in enumerate(fil_keys):
 
 
 
-    ax3.scatter(d[0].index,d[0].med_y,color=d[1],marker=d[2],label=d[4])
+    #ax3.scatter(d[0].index,d[0].med_y,color=d[1],marker=d[2],label=d[4])
 
     ax2[j].plot(np.abs(n.med_y),n.dis,color='red',label='Nothern')
     ax2[j].plot(np.abs(s.med_y),1.-s.dis,color='black',linestyle='--',label='Southern')
@@ -140,9 +180,48 @@ for j,i in enumerate(fil_keys):
 
 
 
-allf = fil_dict['allf'][0]
-np = stats.pearsonr(allf[allf.north == 1].med_y.values,allf[allf.north == 1].med_y.values)
-sp = stats.pearsonr(allf[allf.north == 0].med_y.values,allf[allf.north == 0].med_y.values)
+
+#plotting 1and 2, 3, and 4 versus time
+fig3, ax3 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig3.subplots_adjust(hspace=0.001,wspace=0.001)
+
+#array of filament objects
+tilt_time = ['fil12','fil3','fil4','allf']
+
+#loops over filament types
+for j,i in enumerate(tilt_time):
+
+    allf = fil_dict[i][0]
+    allf.set_index(allf['track_id'],inplace=True)
+    #get unique indices 
+    allf = allf[~allf.index.duplicated(keep='first')]
+    allf.set_index(allf['event_starttime_dt'],inplace=True)
+    allf.sort_index(inplace=True)
+
+    #split into noth and south
+    #http://benalexkeen.com/resampling-time-series-data-with-pandas/
+    #get running mean
+    bn = allf[allf.north == 1]
+    bs = allf[allf.north == 0]
+
+    #resample with fixed cadence
+    mbn = real_resamp(bn,rng,col='med_y')
+    mbs = real_resamp(bs,rng,col='med_y')
+    
+    #plot running mean
+    ax3[j].errorbar(mbn.index,mbn.med_y_mean,xerr=timedelta(days=14),yerr=mbn.med_y_std.values/np.sqrt(mbn.med_y_cnt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean ({0})'.format(sam))
+    ax3[j].errorbar(mbs.index,-mbs.med_y_mean,xerr=timedelta(days=14),yerr=mbs.med_y_std.values/np.sqrt(mbs.med_y_cnt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
+    
+    #Make y versus time plot
+    ax3[j].scatter(bn.index,bn.med_y,color='red',marker='o',label='Northern')
+    ax3[j].scatter(bs.index,-bs.med_y,color='black',marker='D',label='Southern')
+    #Y title
+    ax3[j].set_ylabel("Med. Lat. ['']\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2').replace('allf','All')))
+    fancy_plot(ax3[j])
+    ax3[j].set_ylim([0.,990.])
+    fancy_plot(ax3[j])
+
+
 
 ax[1].set_yticklabels([])
 ax2[1].set_yticklabels([])
@@ -156,27 +235,26 @@ ax5[1].set_title('Southern')
 
 ax[0].set_xlabel("Med. Latitude ['']")
 ax[1].set_xlabel("Med. Latitude ['']")
-ax3.set_xlabel("Time")
+ax3[2].set_xlabel("Time")
 ax5[0].set_xlabel("Med. Latitude ['']")
 ax5[1].set_xlabel("Med. Latitude ['']")
 
 ax[0].set_ylabel('Cumulative Fraction')
 ax2[0].set_ylabel('Cumulative Fraction')
 ax2[2].set_ylabel('Cumulative Fraction')
-ax3.set_ylabel("Med. Latitue ['']")
+#ax3.set_ylabel("Med. Latitue ['']")
 ax5[0].set_ylabel('Cumulative Fraction')
 
 
 fancy_plot(ax[0])
 fancy_plot(ax[1])
-fancy_plot(ax3)
 fancy_plot(ax5[0])
 fancy_plot(ax5[1])
 
 
 ax[0].legend(loc='upper left',frameon=False,fontsize=18)
 ax2[0].legend(loc='upper left',frameon=False,fontsize=18)
-ax3.legend(loc='center left',frameon=False,handletextpad=-.112,scatterpoints=1,fontsize=18)
+ax3[0].legend(loc='lower left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=18,handlelength=1)
 ax5[0].legend(loc='upper left',frameon=False,fontsize=18)
 
 fig.savefig( 'plots/ns_cumla_dis_medy.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
