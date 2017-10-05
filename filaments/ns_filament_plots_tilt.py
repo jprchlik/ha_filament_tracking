@@ -22,7 +22,47 @@ def setup_dis(x,col='med_tilt'):
     x.sort_values(by=col,inplace=True)
     x[len(x)] = x.iloc[-1]
     x['dis']  = np.linspace(0.,1.,len(x))
+
+    #add value so all distributions start on Jan. 1st
+    x.loc[-1] = [np.nan]*x.shape[1]
     return x
+
+
+def real_resamp(x,dates,col='med_tilt'):
+
+    y = pd.DataFrame(index=dates)
+    y[col+'_mean'] = np.nan
+    y[col+'_med'] = np.nan
+    y[col+'_std'] = np.nan
+    y[col+'_sum'] = np.nan
+    y[col+'_cnt'] = np.nan
+   
+    #total number of dates
+    t = len(dates)
+
+    #return y
+
+    for j,i in enumerate(dates):
+
+        if j < t-2:
+            use, = np.where((x.index > i) & (x.index < dates[j+1]))
+        else:
+            use, = np.where(x.index > i)
+          
+        if use.size > 0:
+            y.loc[i,col+'_mean'] = np.mean(x[col].values[use])
+            y.loc[i,col+'_med']  = np.median(x[col].values[use])
+            y.loc[i,col+'_std']  = np.std(x[col].values[use])
+            y.loc[i,col+'_sum']  = np.sum(x[col].values[use])
+            y.loc[i,col+'_cnt']  = use.size
+
+    #Add time average time offset to days
+    #toff = x.index[1:]-x.index[:-1]
+    #x.index = x.index+toff/2.
+    y.index = y.index+pd.DateOffset(days=14)
+
+    return y
+
 
 
 #sampling frequency 
@@ -194,18 +234,24 @@ for j,i in enumerate(tilt_time):
     #get running mean
     bn = allf[allf.north == 1]
     bs = allf[allf.north == 0]
-    mbn = bn.resample('4W').mean().reindex(index=rng,fill_value=0)
-    mbs = bs.resample('4W').mean().reindex(index=rng,fill_value=0)
-    #get running standard deviation
-    sbn = bn.resample('4W').std().reindex(index=rng,fill_value=0)
-    sbs = bs.resample('4W').std().reindex(index=rng,fill_value=0)
-    #get running count
-    cbn = bn.resample('4W').count().reindex(index=rng,fill_value=0)
-    cbs = bs.resample('4W').count().reindex(index=rng,fill_value=0)
+
+    #get running mean
+    ###mbn = bn.resample(sam).mean()
+    ###mbs = bs.resample(sam).mean()
+    ####get running standard deviation
+    ###sbn = bn.resample(sam).std()
+    ###sbs = bs.resample(sam).std()
+    ####get running count
+    ###cbn = bn.resample(sam).count()
+    ###cbs = bs.resample(sam).count()
+  
+    #resample with fixed cadence
+    mbn = real_resamp(bn,rng)
+    mbs = real_resamp(bs,rng)
     
     #plot running mean
-    ax3[j].errorbar(mbn.index,mbn.med_tilt,xerr=timedelta(days=14),yerr=sbn.med_tilt.values/np.sqrt(cbn.med_tilt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean (4W)')
-    ax3[j].errorbar(mbs.index,mbs.med_tilt,xerr=timedelta(days=14),yerr=sbs.med_tilt.values/np.sqrt(cbs.med_tilt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean (4W)')
+    ax3[j].errorbar(mbn.index,mbn.med_tilt_mean,xerr=timedelta(days=14),yerr=mbn.med_tilt_std.values/np.sqrt(mbn.med_tilt_cnt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean ({0})'.format(sam))
+    ax3[j].errorbar(mbs.index,mbs.med_tilt_mean,xerr=timedelta(days=14),yerr=mbs.med_tilt_std.values/np.sqrt(mbs.med_tilt_cnt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
     
     #Make tilt versus time plot
     ax3[j].scatter(bn.index,bn.med_tilt,color='red',marker='o',label='Northern')
@@ -224,18 +270,21 @@ fi_er.sort_index(inplace=True)
 fi_er = fi_er[~fi_er.index.duplicated(keep='first')]
 
 
-n_er = fi_er[fi_er.hpc_y > 0.]
-s_er = fi_er[fi_er.hpc_y < 0.]
+#cut to eruptions only above 30 degrees latitude 
+n_er = fi_er[fi_er.hgs_y >  30.]
+s_er = fi_er[fi_er.hgs_y < -30.]
 
 
 
 #bin up in 4W bins 
-bn_er = n_er.resample('4W').sum().reindex(index=rng,fill_value=0)
-bs_er = s_er.resample('4W').sum().reindex(index=rng,fill_value=0)
+#bn_er = n_er.resample(sam).sum()
+#bs_er = s_er.resample(sam).sum()
+bn_er = real_resamp(n_er,rng,col='events')
+bs_er = real_resamp(s_er,rng,col='events')
 
 #plot run N/S total 
-ax3[3].errorbar(bn_er.index,bn_er.events,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='o',color='red',label='Northern (4W)')
-ax3[3].errorbar(bs_er.index,bs_er.events,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='D',color='black',label='Southern (4W)')
+ax3[3].errorbar(bn_er.index,bn_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='o',color='red',label='Northern ({0})'.format(sam))
+ax3[3].errorbar(bs_er.index,bs_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='D',color='black',label='Southern ({0})'.format(sam))
 ax3[3].set_ylabel('Number of Eruptions')
 fancy_plot(ax3[3])
 
