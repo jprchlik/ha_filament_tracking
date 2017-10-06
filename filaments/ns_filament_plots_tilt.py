@@ -161,8 +161,9 @@ for j,i in enumerate(fil_keys):
         n = setup_dis(n)
         s = setup_dis(s)
 
+        #plot Med Latitude distrbutions 
         ax5[0].plot(n.med_tilt,n.dis,color=d[1],linestyle=d[3],label=d[4])
-        ax5[1].plot(s.med_tilt,s.dis,color=d[1],linestyle=d[3],label=d[4])
+        ax5[1].plot(-s.med_tilt,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
 
 
         #setup d3 and d4 distributions for comparision
