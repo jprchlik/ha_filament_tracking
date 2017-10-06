@@ -14,6 +14,7 @@ from datetime import datetime,timedelta
 import scipy.stats as stats
 import statsmodels.api as sm
 
+#create element for cumlative distribution
 def setup_dis(x,col='med_y'):
     x.set_index(x['track_id'],inplace='true')
     x.sort_values(by=col,inplace=True)
@@ -21,7 +22,8 @@ def setup_dis(x,col='med_y'):
     x['dis']  = np.linspace(0.,1.,len(x))
     return x
 
-def real_resamp(x,dates,col='med_tilt'):
+#resample pandas data frame with fixed time frame
+def real_resamp(x,dates,col='med_y'):
 
     y = pd.DataFrame(index=dates)
     y[col+'_mean'] = np.nan
@@ -65,7 +67,7 @@ fil = pd.read_pickle('filament_catagories.pic')
 fil_dict = {}
 fil_fmt = 'fil{0:1d}'
 
-fil_keys = ['fil1','fil2','fil3','fil4']
+fil_keys = ['fil12','fil3','fil4']
 
 fil_dict['fil1'] = [fil[fil.cat_id == 1],'red'  ,'o','-' ,"Cat. 1"]
 fil_dict['fil2'] = [fil[fil.cat_id == 2],'black','x','--',"Cat. 2"]
@@ -116,18 +118,17 @@ for j,i in enumerate(fil_keys):
     
    
     ax[0].plot(n.med_y,n.dis,color=d[1],linestyle=d[3],label=d[4])
-    ax[1].plot(s.med_y,s.dis,color=d[1],linestyle=d[3],label=d[4])
+    ax[1].plot(-s.med_y,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
 
 
 
-    #ax3.scatter(d[0].index,d[0].med_y,color=d[1],marker=d[2],label=d[4])
 
     ax2[j].plot(np.abs(n.med_y),n.dis,color='red',label='Nothern')
     ax2[j].plot(np.abs(s.med_y),1.-s.dis,color='black',linestyle='--',label='Southern')
     if ad[-1] < 1.0: ax2[j].text(100,.1,'p(A-D) = {0:5.4f}'.format(ad[-1]),fontsize=18)
     ax2[j].text(100,.15,'p(KS2) = {0:5.4f}'.format(k2[-1]),fontsize=18)
     ax2[j].set_title(d[4])
-    ax2[j].set_xlabel(r"|Med. Latitude| ['']")
+    ax2[j].set_xlabel(r"$|$Med. Latitude$|$ ['']")
     ax2[j].set_xlim([80,900])
     fancy_plot(ax2[j])
 
