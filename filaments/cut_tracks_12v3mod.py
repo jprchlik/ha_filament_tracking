@@ -366,7 +366,7 @@ for x,y in enumerate(cav['start_date_dt']):
 
 
                 #only include somewhat stable tracks in category 3
-                cav_inst = fil['num_inst'][i] > 5
+                cav_inst = fil['num_inst'][i] > 3
 
 
                 if ((goodtrack) & (cav_tmat) & (cav_pmat) & (cav_inst)):
@@ -410,6 +410,8 @@ print(len(cat5))
 ### create a column in fil for the median length of each fil track
 med_length = [0]*len(fil['event_starttime_dt'])
 med_y = [0]*len(fil['event_starttime_dt'])
+med_y_hpc = [0]*len(fil['event_starttime_dt'])
+med_x_hpc = [0]*len(fil['event_starttime_dt'])
 med_tilt = [0]*len(fil['event_starttime_dt'])
 for i,j in enumerate(fil['track_id']):
     if med_length[i] == 0:
@@ -417,7 +419,9 @@ for i,j in enumerate(fil['track_id']):
         for x,y in enumerate(id_indices):
             med_length[y] = np.median(fil['fi_length'][id_indices])
             med_y[y] = np.median(fil['meany'][id_indices])
-            med_tilt[y] = np.median(fil['tilt'][id_indices])
+            med_y_hpc[y] = np.median(fil['meany_hgs'][id_indices])
+            med_x_hpc[y] = np.median(fil['meanx_hgs'][id_indices])
+            med_tilt[y] = np.median(fil['fi_tilt'][id_indices])
 
 fil['med_length'] = med_length
 
@@ -426,7 +430,42 @@ fil['med_tilt'] = med_tilt
 
 ### create a column in fil for the median latitude of each fil track
 fil['med_y'] = med_y
+fil['med_y_hpc'] = med_y_hpc
+fil['med_x_hpc'] = med_x_hpc
+
+
+
+#Get a counts for all categories
+fil.sort(['track_id','cat_id'],inplace=True)
 
 
 fil.to_pickle('filament_catagories.pic')
 
+
+#get counts of array
+c_df = fil[~fil.index.duplicated(keep='last')]
+c_df['c_tracks'] = 1
+print(c_df.groupby('cat_id')['c_tracks'].sum().reset_index())
+
+#get all filament ids in category to check with what is store in array
+in1 = []
+for i in cat1.keys(): 
+    for p in cat1[i].tolist(): in1.append(p)
+
+
+
+in2 = []
+for i in cat2.keys(): 
+    for p in cat2[i].tolist(): in2.append(p)
+
+
+in3 = []
+for i in cat3.keys(): 
+    for p in cat3[i].tolist(): in3.append(p)
+
+
+#check category matching
+c_df.loc[in1,['track_id','cat_id']]
+c_df.loc[in2,['track_id','cat_id']]
+c_df.loc[in3,['track_id','cat_id']]
+c_df.loc[cat4,['track_id','cat_id']]
