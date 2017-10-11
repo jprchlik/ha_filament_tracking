@@ -67,11 +67,12 @@ fil = pd.read_pickle('filament_catagories.pic')
 fil_dict = {}
 fil_fmt = 'fil{0:1d}'
 
-fil_keys = ['fil12','fil3','fil4']
+fil_keys = ['fil1','fil2','fil3','fil4']
 
 fil_dict['fil1'] = [fil[fil.cat_id == 1],'red'  ,'o','-' ,"Cat. 1"]
 fil_dict['fil2'] = [fil[fil.cat_id == 2],'black','x','--',"Cat. 2"]
 fil_dict['fil12'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2))],'red'  ,'o','-' ,"Cat. 1 and 2"]
+fil_dict['fil123'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2) | (fil.cat_id == 3))],'purple','^','-' ,"Cat. 1, 2, and 3"]
 fil_dict['fil3'] = [fil[fil.cat_id == 3],'teal' ,'s','-.',"Cat. 3"]
 fil_dict['fil4'] = [fil[fil.cat_id == 4],'blue' ,'D',':' ,"Cat. 4"]
 fil_dict['allf'] = [fil[fil.cat_id != 0],'blue' ,'D',':' ,"Cat. 4"]
@@ -89,7 +90,7 @@ fig5.subplots_adjust(hspace=0.001,wspace=0.001)
 
 
 #compare stable vs unstable filaments
-stab_keys = ['fil1','fil2','fil12','fil3','fil4','allf','alll']
+stab_keys = ['fil1','fil2','fil12','fil123','fil3','fil4','allf','alll']
 for i in stab_keys: 
     d = fil_dict[i]
     d[0]['north'] = 0
@@ -135,6 +136,7 @@ for j,i in enumerate(fil_keys):
 
     #do the camparision for stable filaments vs no stable
     if i == 'fil1':
+        #setup for combined 1 and 2 categories 
         d = fil_dict['fil12']
         d[0] = d[0][~d[0].index.duplicated(keep='first')]
 
@@ -143,8 +145,22 @@ for j,i in enumerate(fil_keys):
         n = setup_dis(n)
         s = setup_dis(s)
 
+        #setup for combined 1, 2, and 3 categories 
+        e = fil_dict['fil123']
+        e[0] = e[0][~e[0].index.duplicated(keep='first')]
+
+        n123 = e[0][e[0].north == 1]
+        s123 = e[0][e[0].north == 0]
+        n123 = setup_dis(n123)
+        s123 = setup_dis(s123)
+
+
+
+        #plot Med lat. distrbutions 
         ax5[0].plot(n.med_y,n.dis,color=d[1],linestyle=d[3],label=d[4])
-        ax5[1].plot(s.med_y,s.dis,color=d[1],linestyle=d[3],label=d[4])
+        ax5[1].plot(-s.med_y,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
+        ax5[0].plot(n123.med_y,n123.dis,color=e[1],linestyle=e[3],label=e[4])
+        ax5[1].plot(-s123.med_y,1.-s123.dis,color=e[1],linestyle=e[3],label=e[4])
 
 
         #setup d3 and d4 distributions for comparision
@@ -168,16 +184,28 @@ for j,i in enumerate(fil_keys):
         ad3s = stats.anderson_ksamp([d3s.med_y.values,s.med_y.values])
         k23s = stats.ks_2samp(d3s.med_y.values,s.med_y.values)
 
+        #two sample anderson-darling test between n or s of 1, 2, and 3 vs 4
+        ad4n = stats.anderson_ksamp([d4n.med_y.values,n123.med_y.values])
+        k24n = stats.ks_2samp(d4n.med_y.values,n123.med_y.values)
+        ad4s = stats.anderson_ksamp([d4s.med_y.values,s123.med_y.values])
+        k24s = stats.ks_2samp(d4s.med_y.values,s123.med_y.values)
+
         #show fit stat on plot
-        if ad[-1] < 1.0: ax5[0].text(550,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3n[-1]),fontsize=14)
+        if ad3n[-1] < 1.0: ax5[0].text(550,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3n[-1]),fontsize=14)
         ax5[0].text(550,.15,'p(KS2;12,3) = {0:5.4f}'.format(k23n[-1]),fontsize=14)
-        if ad[-1] < 1.0: ax5[1].text(-530,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3s[-1]),fontsize=14)
-        ax5[1].text(-530,.15,'p(KS2;12,3) = {0:5.4f}'.format(k23s[-1]),fontsize=14)
+        if ad3s[-1] < 1.0: ax5[1].text(550,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3s[-1]),fontsize=14)
+        ax5[1].text(550,.15,'p(KS2;12,3) = {0:5.4f}'.format(k23s[-1]),fontsize=14)
+
+        #show fit stat on plot for 1, 2, and 3 vs 4
+        if ad4n[-1] < 1.0: ax5[0].text(550,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4n[-1]),fontsize=14)
+        ax5[0].text(550,.05,'p(KS2;123,4) = {0:5.4f}'.format(k24n[-1]),fontsize=14)
+        if ad4s[-1] < 1.0: ax5[1].text(550,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4s[-1]),fontsize=14)
+        ax5[1].text(550,.05,'p(KS2;123,4) = {0:5.4f}'.format(k24s[-1]),fontsize=14)
 
 
     elif ((i == 'fil3') | (i == 'fil4')):
         ax5[0].plot(n.med_y,n.dis,color=d[1],linestyle=d[3],label=d[4])
-        ax5[1].plot(s.med_y,s.dis,color=d[1],linestyle=d[3],label=d[4])
+        ax5[1].plot(-s.med_y,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
 
 
 
@@ -195,7 +223,7 @@ for j,i in enumerate(tilt_time):
     allf = fil_dict[i][0]
     allf.set_index(allf['track_id'],inplace=True)
     #get unique indices 
-    allf = allf[~allf.index.duplicated(keep='first')]
+    allf = allf[~allf.index.duplicated(keep='last')]
     allf.set_index(allf['event_starttime_dt'],inplace=True)
     allf.sort_index(inplace=True)
 
@@ -217,7 +245,7 @@ for j,i in enumerate(tilt_time):
     ax3[j].scatter(bn.index,bn.med_y,color='red',marker='o',label='Northern')
     ax3[j].scatter(bs.index,-bs.med_y,color='black',marker='D',label='Southern')
     #Y title
-    ax3[j].set_ylabel("Med. Lat. ['']\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2').replace('allf','All')))
+    ax3[j].set_ylabel("$|$Med. Lat.$|$ ['']\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2').replace('allf','All')))
     fancy_plot(ax3[j])
     ax3[j].set_ylim([0.,990.])
     fancy_plot(ax3[j])
@@ -234,17 +262,21 @@ ax[1].set_title('Southern')
 ax5[0].set_title('Northern')
 ax5[1].set_title('Southern')
 
-ax[0].set_xlabel("Med. Latitude ['']")
-ax[1].set_xlabel("Med. Latitude ['']")
+ax[0].set_xlabel("$|$Med. Latitude$|$ ['']")
+ax[1].set_xlabel("$|$Med. Latitude$|$ ['']")
 ax3[2].set_xlabel("Time")
-ax5[0].set_xlabel("Med. Latitude ['']")
-ax5[1].set_xlabel("Med. Latitude ['']")
+ax5[0].set_xlabel("$|$Med. Latitude$|$ ['']")
+ax5[1].set_xlabel("$|$Med. Latitude$|$ ['']")
 
 ax[0].set_ylabel('Cumulative Fraction')
 ax2[0].set_ylabel('Cumulative Fraction')
 ax2[2].set_ylabel('Cumulative Fraction')
 #ax3.set_ylabel("Med. Latitue ['']")
 ax5[0].set_ylabel('Cumulative Fraction')
+
+#set xlim for cumlative distribution plots
+ax5[0].set_xlim([50.,1000.])
+ax5[1].set_xlim([50.,1000.])
 
 
 fancy_plot(ax[0])
