@@ -315,8 +315,44 @@ bs_er = real_resamp(s_er,rng,col='events')
 #plot run N/S total 
 ax3[3].errorbar(bn_er.index,bn_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='o',color='red',label='Northern ({0})'.format(sam))
 ax3[3].errorbar(bs_er.index,bs_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='D',color='black',label='Southern ({0})'.format(sam))
+
+#over plot Patric McCuellys Filament Eruption Catalog
+pm_er = pd.read_table('catalog_table.txt',delim_whitespace=True,skiprows=27)
+#remove fill values
+pm_er = pm_er[pm_er.START != '-']
+pm_er['time_dt'] = pd.to_datetime(pm_er.START)
+
+#set index to be time
+pm_er.set_index(pm_er['time_dt'],inplace=True)
+pm_er = pm_er[~pm_er.index.duplicated(keep='first')]
+pm_er['events'] = 1  #used for counting events
+
+#Convert 30 degrees latitude to arcseconds
+from astropy.coordinates import SkyCoord
+from sunpy.coordinates import frames
+from datetime import datetime
+import astropy.units as u
+
+#line to cut the filament erutions 
+cut = SkyCoord(0.*u.deg,30.*u.deg,frame=frames.HeliographicStonyhurst,obstime=datetime(2013,6,6,0,0,0))
+#convert to HPC coordiantes
+cuty = cut.helioprojective.Ty.value #~475
+
+#separate into north and south
+pm_n = pm_er[pm_er.Y.astype('float') > cuty]
+pm_s = pm_er[pm_er.Y.astype('float') <-cuty]
+#get N/S sampled eruptions
+pn_er = real_resamp(pm_n,rng,col='events')
+ps_er = real_resamp(pm_s,rng,col='events')
+
+#plot run N/S total 
+ax3[3].errorbar(pn_er.index,pn_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='s',color='purple',label='Northern ({0})'.format(sam))
+ax3[3].errorbar(ps_er.index,ps_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='^',color='teal',label='Southern ({0})'.format(sam))
+
+
 ax3[3].set_ylabel('Number of Eruptions')
 fancy_plot(ax3[3])
+
 
 
 
