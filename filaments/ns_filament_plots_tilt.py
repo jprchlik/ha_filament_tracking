@@ -41,7 +41,6 @@ def real_resamp(x,dates,col='med_tilt'):
     #total number of dates
     t = len(dates)
 
-    #return y
 
     for j,i in enumerate(dates):
 
@@ -62,7 +61,9 @@ def real_resamp(x,dates,col='med_tilt'):
     #x.index = x.index+toff/2.
     y.index = y.index+pd.DateOffset(days=14)
 
+    #return y
     return y
+
 
 
 
@@ -88,6 +89,7 @@ fil_dict['fil4'] = [fil[fil.cat_id == 4],'blue' ,'D',':' ,"Cat. 4"]
 fil_dict['allf'] = [fil[fil.cat_id != 0],'blue' ,'D',':' ,"All Filaments"]
 
 
+#setup figures
 fig, ax = plt.subplots(ncols=2,figsize=(11,8.5))
 fig1, ax1 = plt.subplots(figsize=(11.,8.5))
 fig2, ax2 = plt.subplots(figsize=(13.,17.),ncols=2,nrows=2)
@@ -98,6 +100,14 @@ fig.subplots_adjust(hspace=0.001,wspace=0.001)
 fig2.subplots_adjust(wspace=0.001)
 fig4.subplots_adjust(hspace=0.001)
 fig5.subplots_adjust(hspace=0.001,wspace=0.001)
+
+#set up random distribution for comparison
+samples = 10000
+cuml_tilt = np.linspace(0.,1.,samples)
+rand_tilt = np.sort((np.random.rand(samples)-.5)*90.*2.)
+norm_tilt = np.random.normal(scale=fil_dict['allf'][0].med_tilt.std(),size=samples)
+norm_tilt = np.sort(norm_tilt)
+
 
 
 #compare stable vs unstable filaments
@@ -124,6 +134,10 @@ for j,i in enumerate(fil_keys):
     n = setup_dis(n)
     s = setup_dis(s)
   
+    #overplot statiscal distributions 
+    ax2[j].plot(rand_tilt,cuml_tilt,'-',color='teal',label='Random')
+    ax2[j].plot(norm_tilt,cuml_tilt,'-',color='blue',label='Gaussian')
+
     #Not sure why I did this but it messes up the distributions
     #n.set_index(n['event_starttime_dt'],inplace=True)
     #n.sort_index(inplace=True)
@@ -292,6 +306,25 @@ for j,i in enumerate(tilt_time):
     fancy_plot(ax3[j])
     ax3[j].set_ylim([-90.,90.])
 
+#Add sunspot number to output
+ss_nm = pd.read_pickle('sunspots/query_output/all_ss_20120101-20141130.pic')
+#cut to eruptions only above 30 degrees latitude 
+n_ss = ss_nm[ss_nm.hgs_y >  0.]
+s_ss = ss_nm[ss_nm.hgs_y < -0.]
+
+
+#bin up in 4W bins 
+bn_ss = real_resamp(n_ss,rng,col='hgs_y')
+bs_ss = real_resamp(s_ss,rng,col='hgs_y')
+
+#plot average height of sunspots
+ax3[3].errorbar(bn_ss.index,np.abs(bn_ss.hgs_y_mean.values),yerr=bn_ss.hgs_y_std.values/np.sqrt(bn_ss.hgs_y_cnt.values),xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax3[3].errorbar(bs_ss.index,np.abs(bs_ss.hgs_y_mean.values),yerr=bs_ss.hgs_y_std.values/np.sqrt(bs_ss.hgs_y_cnt.values),xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax3[3].plot(bn_ss.index,np.abs(bn_ss.hgs_y_mean.values),'-',color='red',label='Northern ({0})'.format(sam))
+ax3[3].plot(bs_ss.index,np.abs(bs_ss.hgs_y_mean.values),'--',color='black',label='Southern ({0})'.format(sam))
+
+########################################################################################
+
 #Add number of eruptions to output
 fi_er = pd.read_pickle('filament_eruptions/query_output/all_fe_20120101-20141130.pic')
 fi_er['events'] = 1
@@ -301,9 +334,8 @@ fi_er = fi_er[~fi_er.index.duplicated(keep='first')]
 
 
 #cut to eruptions only above 30 degrees latitude 
-n_er = fi_er[fi_er.hgs_y >  30.]
+n_er = fi_er[fi_er.hgs_y > 30.]
 s_er = fi_er[fi_er.hgs_y < -30.]
-
 
 
 #bin up in 4W bins 
@@ -313,17 +345,19 @@ bn_er = real_resamp(n_er,rng,col='events')
 bs_er = real_resamp(s_er,rng,col='events')
 
 #plot run N/S total 
-ax3[3].errorbar(bn_er.index,bn_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='o',color='red',label='Northern ({0})'.format(sam))
-ax3[3].errorbar(bs_er.index,bs_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='D',color='black',label='Southern ({0})'.format(sam))
+#Switch filament eruptions to sunspot number 2017/10/13
+#ax3[3].errorbar(bn_er.index,bn_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='o',color='red',label='Northern ({0})'.format(sam))
+#ax3[3].errorbar(bs_er.index,bs_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='D',color='black',label='Southern ({0})'.format(sam))
 
 #over plot Patric McCuellys Filament Eruption Catalog
 pm_er = pd.read_table('catalog_table.txt',delim_whitespace=True,skiprows=27)
 #remove fill values
-pm_er = pm_er[pm_er.START != '-']
+pm_er = pm_er[((pm_er.START != '-') & (pm_er.TYPE != 'AR'))]
 pm_er['time_dt'] = pd.to_datetime(pm_er.START)
 
 #set index to be time
 pm_er.set_index(pm_er['time_dt'],inplace=True)
+#remove any duplicates
 pm_er = pm_er[~pm_er.index.duplicated(keep='first')]
 pm_er['events'] = 1  #used for counting events
 
@@ -336,7 +370,7 @@ import astropy.units as u
 #line to cut the filament erutions 
 cut = SkyCoord(0.*u.deg,30.*u.deg,frame=frames.HeliographicStonyhurst,obstime=datetime(2013,6,6,0,0,0))
 #convert to HPC coordiantes
-cuty = cut.helioprojective.Ty.value #~475
+cuty = cut.helioprojective.Ty.value #~475-485 over a year (using 475)
 
 #separate into north and south
 pm_n = pm_er[pm_er.Y.astype('float') > cuty]
@@ -346,11 +380,14 @@ pn_er = real_resamp(pm_n,rng,col='events')
 ps_er = real_resamp(pm_s,rng,col='events')
 
 #plot run N/S total 
-ax3[3].errorbar(pn_er.index,pn_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='s',color='purple',label='Northern ({0})'.format(sam))
-ax3[3].errorbar(ps_er.index,ps_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='^',color='teal',label='Southern ({0})'.format(sam))
+#Switch filament eruptions to sunspot number 2017/10/13
+#ax3[3].errorbar(pn_er.index,pn_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='s',color='purple',label='Northern ({0})'.format(sam))
+#ax3[3].errorbar(ps_er.index,ps_er.events_sum,xerr=timedelta(days=14),capsize=3,barsabove=True,fmt='^',color='teal',label='Southern ({0})'.format(sam))
 
 
-ax3[3].set_ylabel('Number of Eruptions')
+#Switch filament eruptions to sunspot number 2017/10/13
+#ax3[3].set_ylabel('Number of Eruptions')
+ax3[3].set_ylabel('Ave. Sun Spot Lat. [deg]')
 fancy_plot(ax3[3])
 
 
@@ -406,6 +443,6 @@ ax5[0].legend(loc='upper left',frameon=False,fontsize=18)
 fig.savefig( 'plots/ns_cumla_dis_tilt.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig1.savefig('plots/med_tilt_v_med_lat.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig2.savefig('plots/ns_cat_cumla_dis_tilt.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
-fig3.savefig('plots/tilt_v_time_w_fe.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig3.savefig('plots/tilt_v_time_w_ss.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig4.savefig('plots/ns_med_tilt_v_med_lat.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig5.savefig('plots/ns_cumla_dis_tilt_comb12.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
