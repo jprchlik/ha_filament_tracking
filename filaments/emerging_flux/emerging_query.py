@@ -2,6 +2,7 @@ from sunpy.net import hek
 import numpy as np
 import pandas as pd
 from datetime import datetime,timedelta
+import os
 
 def format_string(st):
 
@@ -46,31 +47,42 @@ event_type = 'EF'
 t = 0
 for k,m in enumerate(real_cad):
 
-    failed = True
-    #get filament eruption in time rangeh
-    while failed:
-        try:
-            result = client.search(hek.attrs.Time(m,m+timedelta(seconds=cad)),hek.attrs.EventType(event_type))
-            failed = False
-        except:
-            failed = False
-
-
-    #get the keys to store for emerging flux
-    if k == 0:
-        #return possible key 
-        keys = result[0].keys()
-        
-        #create pandas data frame from keys
-        ef_df = pd.DataFrame(columns=keys)
+    #output file name
+    fname = 'query_output/{0}_ef.pic'.format(m.strftime('%Y%m%d'))
     
-    #turn dictionary into pandas Data frame
-    for j,i in enumerate(result): 
-        ef_df.loc[t] = [i[k] for k in keys]
-        t+= 1
+    #check to see if file already exists
+    testfile = os.path.isfile(fname)
+   
+    #if it does just restore and continue
+    if testfile:
+        ef_df = pd.read_pickle(fname)
+        keys = ef_df.columns
+        continue
+    else:
+        failed = True
+        #get filament eruption in time rangeh
+        while failed:
+            try:
+                result = client.search(hek.attrs.Time(m,m+timedelta(seconds=cad)),hek.attrs.EventType(event_type))
+                failed = False
+            except:
+                failed = False
 
-    #save current table to file
-    ef_df.to_pickle('query_output/{0}_ef.pic'.format(m.strftime('%Y%m%d')))
+        #get the keys to store for emerging flux
+        if k == 0:
+            #return possible key 
+            keys = result[0].keys()
+            
+            #create pandas data frame from keys
+            ef_df = pd.DataFrame(columns=keys)
+        
+        #turn dictionary into pandas Data frame
+        for j,i in enumerate(result): 
+            ef_df.loc[t] = [i[k] for k in keys]
+            t+= 1
+
+        #save current table to file
+        ef_df.to_pickle(fname)
             
 
 
