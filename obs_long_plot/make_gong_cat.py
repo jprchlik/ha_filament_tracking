@@ -16,6 +16,9 @@ def create_images(i):
     global dat,pdir,lref
     out = halpha_plot(dat,i,pdir,lref=lref)
     out.plot_filament_track()
+
+    #remove from memory when done
+    out = False
     
 
 
@@ -65,7 +68,7 @@ def main(infile,outmov,outdir='/track_plots/',start='2012-01-01T00:00:00',end='2
         os._exit(1)
        
 
-    pickled = infile.split('.')[1] == 'pic'
+    pickled = infile.split('.')[-1] == 'pic'
     if pickled:#use pickle file if it already exits
         dat = pd.read_pickle(infile)
     else: #create pickle file if doesnt exist
