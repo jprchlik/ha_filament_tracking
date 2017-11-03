@@ -55,7 +55,17 @@ def main(infile,outmov,outdir='/track_plots/',start='2012-01-01T00:00:00',end='2
     
     global dat,pdir,lref
     lref = inlref
-    pickled = os.path.isfile(infile)
+
+    #make sure file exists
+    exists = os.path.isfile(infile)
+
+    #if file does not exists leave
+    if not exists:
+        print(infile,' does not exist')
+        os._exit(1)
+       
+
+    pickled = infile.split('.')[1] == 'pic'
     if pickled:#use pickle file if it already exits
         dat = pd.read_pickle(infile)
     else: #create pickle file if doesnt exist
