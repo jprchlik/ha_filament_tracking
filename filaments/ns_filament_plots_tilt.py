@@ -306,6 +306,7 @@ for j,i in enumerate(tilt_time):
     fancy_plot(ax3[j])
     ax3[j].set_ylim([-90.,90.])
 
+
 #Add sunspot number to output
 ss_nm = pd.read_pickle('sunspots/query_output/all_ss_20120101-20141130.pic')
 #cut to eruptions only above 30 degrees latitude 
@@ -322,6 +323,52 @@ ax3[3].errorbar(bn_ss.index,np.abs(bn_ss.hgs_y_mean.values),yerr=bn_ss.hgs_y_std
 ax3[3].errorbar(bs_ss.index,np.abs(bs_ss.hgs_y_mean.values),yerr=bs_ss.hgs_y_std.values/np.sqrt(bs_ss.hgs_y_cnt.values),xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
 ax3[3].plot(bn_ss.index,np.abs(bn_ss.hgs_y_mean.values),'-',color='red',label='Northern ({0})'.format(sam))
 ax3[3].plot(bs_ss.index,np.abs(bs_ss.hgs_y_mean.values),'--',color='black',label='Southern ({0})'.format(sam))
+
+
+#Take advatage of the fact I use filament 4 last in the looping and find the correlations between sunspot height and filament 4 tilts
+fig6, ax6 = plt.subplots()
+#Northern Matching
+#ax6.scatter(np.abs(bn_ss.hgs_y_mean.values),np.abs(mbn.med_tilt_mean),color='red',marker='o',label='North')
+#ax6.scatter(np.abs(bn_ss.hgs_y_mean.values)[1:],np.abs(mbn.med_tilt_mean.values[:-1]),color='red',marker='<',label='FI -14 days')
+ax6.scatter(np.abs(bn_ss.hgs_y_mean.values)[:-1],-(mbn.med_tilt_mean.values[1:]),color='red',marker='o',label='Northern (FI +28 days)')
+
+#Southern Matching
+#ax6.scatter(np.abs(bs_ss.hgs_y_mean.values),np.abs(mbs.med_tilt_mean),color='black',marker='o',label='Southern')
+#ax6.scatter(np.abs(bs_ss.hgs_y_mean.values)[1:],np.abs(mbs.med_tilt_mean.values[:-1]),color='black',marker='<',label='FI -14 days')
+ax6.scatter(np.abs(bs_ss.hgs_y_mean.values)[:-1],(mbs.med_tilt_mean.values[1:]),color='black',marker='o',label='Southern (FI +28 days)')
+
+x = np.concatenate([np.abs(bn_ss.hgs_y_mean.values)[:-1],np.abs(bs_ss.hgs_y_mean.values)[:-1]])
+y = np.concatenate([-mbn.med_tilt_mean.values[1:],mbs.med_tilt_mean.values[1:]])
+
+use, = np.where((np.isfinite(x)) & (np.isfinite(y)))
+
+r_tl_ss = stats.pearsonr(x[use],y[use])
+
+ax6.text(5.,-50.,'r={0:4.3f}'.format(*r_tl_ss),fontsize=16,color='black')
+
+ax6.set_xlim([4.,25.])
+
+ax6.set_xlabel('$|$Mean SS Lat.$|$ [deg.]')
+ax6.set_ylabel('Mean FI Tilt [deg.]')
+
+
+##
+# plot the difference between sunspot height and filament tilt in the N and S
+fig7, ax7 = plt.subplots()
+
+tot_err_x = np.sqrt((bs_ss.hgs_y_std.values/np.sqrt(bs_ss.hgs_y_cnt.values))**2.+(bn_ss.hgs_y_std.values/np.sqrt(bn_ss.hgs_y_cnt.values))**2.+
+                     (bs_ss.hgs_y_mean.values/np.sqrt(bs_ss.hgs_y_cnt.size))**2+ #errors due to counting
+                     (bn_ss.hgs_y_mean.values/np.sqrt(bn_ss.hgs_y_cnt.size))**2) #errors due to counting
+tot_err_y = np.sqrt((mbs.med_tilt_std.values/np.sqrt(mbs.med_tilt_cnt.values))**2.+(mbn.med_tilt_std.values/np.sqrt(mbn.med_tilt_cnt.values))**2.+
+                     (mbs.med_tilt_mean.values/np.sqrt(mbs.med_tilt_cnt.size))**2+ #errors due to counting
+                     (mbn.med_tilt_mean.values/np.sqrt(mbn.med_tilt_cnt.size))**2) #errors due to counting
+
+ax7.scatter(bn_ss.hgs_y_mean.values+bs_ss.hgs_y_mean.values,mbn.med_tilt_mean.values-mbs.med_tilt_mean.values,color='black',marker='o')
+ax7.errorbar(bn_ss.hgs_y_mean.values+bs_ss.hgs_y_mean.values,mbn.med_tilt_mean.values-mbs.med_tilt_mean.values,color='black',
+             yerr=tot_err_y,xerr=tot_err_x,capsize=3,barsabove=True,linewidth=3,fmt='o')
+
+ax7.set_ylabel('Diff. Tilt (N-S) [deg.]')
+ax7.set_xlabel('Diff. SS Lat. (N-S) [deg.]')
 
 ########################################################################################
 
@@ -431,6 +478,8 @@ fancy_plot(ax4[0])
 fancy_plot(ax4[1])
 fancy_plot(ax5[0])
 fancy_plot(ax5[1])
+fancy_plot(ax6)
+fancy_plot(ax7)
 
 
 ax[0].legend(loc='upper left',frameon=False,fontsize=18)
@@ -439,6 +488,7 @@ ax2[0].legend(loc='upper left',frameon=False,fontsize=18)
 ax3[0].legend(loc='upper left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=18,handlelength=1)
 ax4[0].legend(loc='lower right',frameon=False,fontsize=18)
 ax5[0].legend(loc='upper left',frameon=False,fontsize=18)
+ax6.legend(loc='lower right',scatterpoints=1,handletextpad=-0.112,frameon=False,fontsize=12)
 
 fig.savefig( 'plots/ns_cumla_dis_tilt.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig1.savefig('plots/med_tilt_v_med_lat.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
@@ -446,3 +496,5 @@ fig2.savefig('plots/ns_cat_cumla_dis_tilt.png',bbox_pad=.1,bbox_inches='tight',f
 fig3.savefig('plots/tilt_v_time_w_ss.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig4.savefig('plots/ns_med_tilt_v_med_lat.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig5.savefig('plots/ns_cumla_dis_tilt_comb12.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig6.savefig('plots/ns_tilt_ss_height_fil4.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig7.savefig('plots/ns_diff_tilt_diff_ss_height_fil4.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
