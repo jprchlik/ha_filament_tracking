@@ -140,7 +140,7 @@ class halpha_plot:
         #update deprecated function J. Prchlik 2017/11/03
         c = SkyCoord(xs*u.arcsec,ys*u.arcsec,obstime=start,frame=frames.Helioprojective)                    
         #rotate start points to end time
-        nc = solar_rotate_coordinate(c,end)
+        nc = solar_rotate_coordinate(c,self.stop)
 
         #get rid of units
         stopx, stopy = nc.Tx.value, nc.Ty.value
