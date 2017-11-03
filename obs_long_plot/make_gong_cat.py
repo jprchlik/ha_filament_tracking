@@ -63,7 +63,7 @@ def main(infile,outmov,outdir='/track_plots/',start='2012-01-01T00:00:00',end='2
         dat = pd.read_csv(infile,delimiter='\t')
         #add variables like datetime and average position to dat
         dat = ap.add_props(dat).dat
-        dat.to_pickle(infile.replace('txt','pic')
+        dat.to_pickle(infile.replace('txt','pic'))
     
     
     #set up plot directory
