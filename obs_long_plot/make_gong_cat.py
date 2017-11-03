@@ -25,24 +25,50 @@ def create_images(i):
 #start = datetime.strptime('2013/01/00T00:00:00',fmt)
 #end = datetime.strptime('2013/01/31T23:59:59',fmt)
 
-def main(infile,outmov,start='2012-01-01T00:00:00',end='2014-12-01T00:00:00',dfmt = '%Y-%m-%dT%H:%M:%S',inlref=False):
+def main(infile,outmov,outdir='/track_plots/',start='2012-01-01T00:00:00',end='2014-12-01T00:00:00',dfmt = '%Y-%m-%dT%H:%M:%S',inlref=False):
+ 
+    """
+    Create a movie with Halpha filament tracks overplotted on Halpha filament observations from GONG
+
+    Parameters
+    ----------
+    infile : string
+        The file containing Halpha filament instances (from the HEK) and their track number (from GSU)
+    outmov : string
+        The filename of the output movie (mp4 extenstion needed)
+    outdir : string (optional)
+        The output directory for png files relative to the current working directory (default = '/track_plots/')
+    start  : string (optional)
+        The observation time to start  GONG data download, make images, and make movie (default = '2012-01-01T00:00:00').
+        Must be in format supplied by dfmt.
+    end    : string (optional)
+        The observation time to end GONG data download, make images, and make movie (default = '2012-12-01T00:00:00').
+        Must be in format supplied by dfmt.
+    dfmt   : string (optional)
+        Python string datetime format for input start and end times (default = '%Y-%m-%dT%H:%M:%S').
+    lref   : boolean (optional)
+        Plot reference line for good tracks to match with filament (40 degrees, default = False).
+
+        
+
+    """
+    
     global dat,pdir,lref
     lref = inlref
     pickled = os.path.isfile(infile)
     if pickled:#use pickle file if it already exits
         dat = pd.read_pickle(infile)
     else: #create pickle file if doesnt exist
-        infile = '../init_data/FITracked_3yr.txt'
         #dat = ascii.read('../init_data/FITracked_3yr.txt',delimiter='\t',guess=False)
         dat = pd.read_csv(infile,delimiter='\t')
         #add variables like datetime and average position to dat
         dat = ap.add_props(dat).dat
-        dat.to_pickle('../init_data/FITracked_3yr.pic')
+        dat.to_pickle(infile.replace('txt','pic')
     
     
     #set up plot directory
     sdir = os.getcwd()
-    pdir = sdir+'/track_plots/'
+    pdir = sdir+outdir
     
     try:
         os.mkdir(pdir)
