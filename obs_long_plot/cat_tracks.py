@@ -8,10 +8,36 @@ import os
 import pandas as pd
 from shapely.geometry import Polygon,MultiPoint,LineString
 import astropy.units as u
-from sunpy.physics import solar_rotation
+#function deprecated
+#from sunpy.physics import solar_rotation
+
+#use new sunpy rotation routine
+from sunpy.physics.differential_rotation import solar_rotate_coordinate
+from astropy.coordinates import SkyCoord
+#get frame for coordiantes
+from sunpy.coordinates import frames
+import astropy.units as u
+
+
+
+
 from datetime import datetime,timedelta
 from matplotlib.path import Path
 
+
+#mimic program rot_hpc with new routines
+def rot_hpc(xs,ys,start,end,rot_type='meaningless'):
+    xs, ys = self.calc_poly_values(coor)
+    #update deprecated function J. Prchlik 2017/11/03
+    c = SkyCoord(xs*u.arcsec,ys*u.arcsec,obstime=start,frame=frames.Helioprojective)                    
+    #rotate start points to end time
+    nc = solar_rotate_coordinate(c,end)
+
+    #split into x and y
+    rotx, roty = nc.Tx, nc.Ty
+
+    #return rotated coordinates
+    return rotx,roty
 
 def calc_poly_values(coor):
     """calc_poly_values returns an array of x,y values from Polygon string in pandas object
@@ -102,7 +128,10 @@ for i in uniqlist:
     #find when filament goes over the limb
         while curr < maxr:
             maxt = t132b+timedelta(minutes=20*p)  
-            curx, cury =  solar_rotation.rot_hpc(t1meanx*u.arcsec,t1meany*u.arcsec,t132b,maxt,rot_type=rot_type) #current position
+            #remove deprecated fucntion J. Prchlik 2017/11/03
+            #curx, cury =  solar_rotation.rot_hpc(t1meanx*u.arcsec,t1meany*u.arcsec,t132b,maxt,rot_type=rot_type) #current position
+            curx, cury =  rot_hpc(t1meanx*u.arcsec,t1meany*u.arcsec,t132b,maxt,rot_type=rot_type) #current position
+            
             curr = np.sqrt(curx.value**2.+cury.value**2.)
     
             if maxt > t132b + timedelta(days=14): curr = 90000. #if the rotation goes for more than 14 days assume error and end search
@@ -132,7 +161,9 @@ for i in uniqlist:
     
         for j in possm:
              t232b = datetime.utcfromtimestamp(dat['event_starttime_dt'].values[j].tolist()/1e9) #covert to datetime object
-             t12posx, t12posy =  solar_rotation.rot_hpc(t1posx*u.arcsec,t1posy*u.arcsec,t132b,t232b,rot_type=rot_type) #current position rotated to future time
+             #removing depricated function J. Prchlik (2017/11/03)
+             #t12posx, t12posy =  solar_rotation.rot_hpc(t1posx*u.arcsec,t1posy*u.arcsec,t132b,t232b,rot_type=rot_type) #current position rotated to future time
+             t12posx, t12posy =  rot_hpc(t1posx*u.arcsec,t1posy*u.arcsec,t132b,t232b,rot_type=rot_type) #current position rotated to future time
 
     
              #remove units
