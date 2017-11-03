@@ -7,7 +7,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from shapely.wkt  import dumps, loads
 from matplotlib.patches import *
-from sunpy.physics import solar_rotation
+#function deprecated 
+#from sunpy.physics import solar_rotation
+
+#use new sunpy rotation routine
+from sunpy.physics.differential_rotation import solar_rotate_coordinate
+from astropy.coordinates import SkyCoord
+#get frame for coordiantes
+from sunpy.coordinates import frames
+import astropy.units as u
+
+
 from sunpy.sun import solar_semidiameter_angular_size
 import astropy.units as u
 import pyfits
@@ -125,10 +135,15 @@ class halpha_plot:
         """
     
         xs, ys = self.calc_poly_values(coor)
-    #calculate the mean position
-        stopx, stopy = solar_rotation.rot_hpc(xs*u.arcsec,ys*u.arcsec,start,self.stop)
-    #get rid of units
-        stopx, stopy = stopx.value, stopy.value
+        #calculate the mean position
+        #stopx, stopy = solar_rotation.rot_hpc(xs*u.arcsec,ys*u.arcsec,start,self.stop)
+        #update deprecated function J. Prchlik 2017/11/03
+        c = SkyCoord(xs*u.arcsec,ys*u.arcsec,obstime=start,frame=frames.Helioprojective)                    
+        #rotate start points to end time
+        nc = solar_rotate_coordinate(c,end)
+
+        #get rid of units
+        stopx, stopy = nc.Tx.value, nc.Ty.value
     
     
         self.ax.plot(stopx,stopy,linestyle=linestyle,color=color,zorder=500,alpha=alpha,linewidth=3)
