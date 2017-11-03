@@ -117,6 +117,6 @@ def main(infile,outmov,outdir='/track_plots/',start='2012-01-01T00:00:00',end='2
     
     os.chdir(rdir)
     #create movie from image files
-    imov = make_movie.create_movie(w0=2048,h0=2048,nproc=4,outmov=outmov)
+    imov = make_movie.create_movie(w0=2048,h0=2048,nproc=4,outmov=outmov,pdir=outdir[1:])
     imov.create_movie()
 
