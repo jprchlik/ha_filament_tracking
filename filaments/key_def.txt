@@ -1,0 +1,16 @@
+FROM http://www.lmsal.com/hek/VOEvent_Spec.html
+
+EF_PosPeakFluxOnsetRate	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Emergence rate of positive polarity flux
+EF_NegPeakFluxOnsetRate	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Emergence rate of negative polarity flux
+EF_OnsetRateUnit	string	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Emergence rate unit (e.g. 'Mx/s')
+EF_SumPosSignedFlux	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Total positive signed flux at completion
+EF_SumNegSignedFlux	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Total negative signed flux at completion (negative number)
+EF_FluxUnit	string	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Flux unit (e.g. 'Mx')
+EF_AxisOrientation	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Axis orientation of emerging flux pair (CCW from parallels in Stonyhurst longitude
+EF_AxisOrientationUnit	string	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Axis oriention unit (deg)
+EF_AxisLength	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Axis length of emerging flux pair at completion
+EF_PosEquivRadius	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Equivalent radius (i.e. sqrt(area/pi) of positive polarity at completion
+EF_NegEquivRadius	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Equivalent radius (i.e. sqrt(area/pi) of negative polarity at completion
+EF_LengthUnit	string	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Units for EF_AxisLength
+EF_AspectRatio	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	(EF_PosEquivRadius+EF_NegEquivRadius)/(2*EF_AxisLength)
+EF_ProximityRatio	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	(EF_PosEquivRadius-EF_NegEquivRadius)/(2*EF_AxisLength)
