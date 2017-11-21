@@ -77,7 +77,8 @@ def real_resamp(x,dates,col='med_tilt'):
 #sampling frequency 
 sam = '4W'
 #get pandas timeseries representation for filament tracking code time range
-rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
+rng = pd.date_range('2010-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
+#rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
 
 #read in filament categories given in Brianna's code
 fil = pd.read_pickle('filament_catagories.pic')
@@ -398,6 +399,13 @@ ax7.set_xlabel('Diff. SS Lat. (N-S) [deg.]')
 #plots for emerging flux
 #Add sunspot number to output
 ef_nm = pd.read_pickle('emerging_flux/query_output/all_ef_20120101-20141130.pic')
+#Add earlier observations
+ef_2  = pd.read_pickle('emerging_flux/query_output/all_ef_20100523-20120101.pic')
+#add earlier emerging flux eobservations to ones during the filament catelog
+ef_nm = pd.concat([ef_2,ef_nm])
+
+
+
 
 ef_nm.loc[:,'sum_unsigned_flux'] = ef_nm.ef_sumpossignedflux-ef_nm.ef_sumnegsignedflux
 ef_nm.loc[:,'sum_signed_flux']   = ef_nm.ef_sumpossignedflux+ef_nm.ef_sumnegsignedflux
@@ -406,11 +414,11 @@ ef_nm.loc[:,'sum_signed_flux']   = ef_nm.ef_sumpossignedflux+ef_nm.ef_sumnegsign
 n_ef = ef_nm[ef_nm.hgs_y >  0.]
 s_ef = ef_nm[ef_nm.hgs_y < -0.]
 
-check = 'hgs_y'
-check = 'ef_axislength'
+#check = 'hgs_y'
+#check = 'ef_axislength'
 #check = 'sum_unsigned_flux'
 #ratio almost looks like it has a year offset
-#check = 'ef_proximityratio'
+check = 'ef_proximityratio'
 #check = 'ef_sumpossignedflux'
 #check = 'ef_sumpossignedflux'
 
@@ -430,7 +438,7 @@ ax8[3].plot(bs_ef.index,np.abs(bs_ef[check+'_mean'].values),'--',color='black',l
 
 fancy_plot(ax8[3])
 
-ax8[3].set_ylabel('$<$EF Height$>$ [Deg.]')
+ax8[3].set_ylabel('Proximity Ratio')
 ax8[3].set_xlabel('Time [UTC]')
 
 fig8.savefig('plots/emerging_flux_time.png',bbox_pad=.1,bbox_inches='tight')
