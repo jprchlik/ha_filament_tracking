@@ -72,6 +72,12 @@ t_fil = fil.groupby(['track_id','event_starttime'])['fi_length'].sum()
 #remerg t_fil values
 fil = fil.merge(t_fil.to_frame(),how='left',left_on=['track_id','event_starttime'],right_index=True,suffixes=('','_summed'))
 
+#get median values of fi_length_summed
+t_fil = fil.groupby(['track_id'])['fi_length_summed'].median()
+
+#remerg t_fil values
+fil = fil.merge(t_fil.to_frame(),how='left',left_on=['track_id'],right_index=True,suffixes=('','_med'))
+
 fil_dict = {}
 fil_fmt = 'fil{0:1d}'
 
@@ -266,15 +272,15 @@ for j,i in enumerate(tilt_time):
     fancy_plot(ax3[j])
 
     #resample with fixed cadence
-    mbn = real_resamp(bn,rng,col='fi_length_summed')
-    mbs = real_resamp(bs,rng,col='fi_length_summed')
+    mbn = real_resamp(bn,rng,col='fi_length_summed_med')
+    mbs = real_resamp(bs,rng,col='fi_length_summed_med')
     #plot running mean
-    ax6[j].errorbar(mbn.index,mbn.fi_length_summed_mean,xerr=timedelta(days=14),yerr=mbn.fi_length_summed_std.values/np.sqrt(mbn.fi_length_summed_cnt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean ({0})'.format(sam))
-    ax6[j].errorbar(mbs.index,mbs.fi_length_summed_mean,xerr=timedelta(days=14),yerr=mbs.fi_length_summed_std.values/np.sqrt(mbs.fi_length_summed_cnt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
+    ax6[j].errorbar(mbn.index,mbn.fi_length_summed_med_mean,xerr=timedelta(days=14),yerr=mbn.fi_length_summed_med_std.values/np.sqrt(mbn.fi_length_summed_med_cnt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean ({0})'.format(sam))
+    ax6[j].errorbar(mbs.index,mbs.fi_length_summed_med_mean,xerr=timedelta(days=14),yerr=mbs.fi_length_summed_med_std.values/np.sqrt(mbs.fi_length_summed_med_cnt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
     
     #Make y versus time plot
-    ax6[j].scatter(bn.index,bn.fi_length_summed,color='red',marker='o',label='Northern')
-    ax6[j].scatter(bs.index,bs.fi_length_summed,color='black',marker='D',label='Southern')
+    ax6[j].scatter(bn.index,bn.fi_length_summed_med,color='red',marker='o',label='Northern')
+    ax6[j].scatter(bs.index,bs.fi_length_summed_med,color='black',marker='D',label='Southern')
     #Y title
     ax6[j].set_ylabel("Med. FI Length [cm]\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2').replace('allf','All')))
     fancy_plot(ax6[j])
