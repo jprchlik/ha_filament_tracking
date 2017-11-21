@@ -62,7 +62,15 @@ sam = '4W'
 #get pandas timeseries representation for filament tracking code time range
 rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
 
+#read in filament categories file
 fil = pd.read_pickle('filament_catagories.pic')
+
+
+#add summed length column
+t_fil = fil.groupby(['track_id','event_starttime'])['fi_length'].sum()
+
+#remerg t_fil values
+fil = fil.merge(t_fil.to_frame(),how='left',left_on=['track_id','event_starttime'],right_index=True,suffixes=('','_summed'))
 
 fil_dict = {}
 fil_fmt = 'fil{0:1d}'
@@ -98,6 +106,9 @@ for i in stab_keys:
 
 
 
+
+
+#cut out dulpicate track ids and set index  to event starttime
 for j,i in enumerate(fil_keys):
     d = fil_dict[i]
 
@@ -210,9 +221,13 @@ for j,i in enumerate(fil_keys):
 
 
 
-#plotting 1and 2, 3, and 4 versus time
+#plotting 1and 2, 3, and 4 filament height versus time
 fig3, ax3 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
 fig3.subplots_adjust(hspace=0.001,wspace=0.001)
+
+#plotting 1and 2, 3, and 4 filament length versus time
+fig6, ax6 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig6.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #array of filament objects
 tilt_time = ['fil12','fil3','fil4','allf']
@@ -250,6 +265,28 @@ for j,i in enumerate(tilt_time):
     ax3[j].set_ylim([0.,990.])
     fancy_plot(ax3[j])
 
+    #resample with fixed cadence
+    mbn = real_resamp(bn,rng,col='fi_length_summed')
+    mbs = real_resamp(bs,rng,col='fi_length_summed')
+    #plot running mean
+    ax6[j].errorbar(mbn.index,mbn.fi_length_summed_mean,xerr=timedelta(days=14),yerr=mbn.fi_length_summed_std.values/np.sqrt(mbn.fi_length_summed_cnt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean ({0})'.format(sam))
+    ax6[j].errorbar(mbs.index,mbs.fi_length_summed_mean,xerr=timedelta(days=14),yerr=mbs.fi_length_summed_std.values/np.sqrt(mbs.fi_length_summed_cnt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
+    
+    #Make y versus time plot
+    ax6[j].scatter(bn.index,bn.fi_length_summed,color='red',marker='o',label='Northern')
+    ax6[j].scatter(bs.index,bs.fi_length_summed,color='black',marker='D',label='Southern')
+    #Y title
+    ax6[j].set_ylabel("Med. FI Length [cm]\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2').replace('allf','All')))
+    fancy_plot(ax6[j])
+    #ax6[j].set_ylim([0.,9.])
+
+    #set yscale for filament lengths
+    ax6[j].set_yscale('log')
+    ax6[j].set_ylim([1.E9,2.E11])
+
+
+
+
 
 
 ax[1].set_yticklabels([])
@@ -264,9 +301,10 @@ ax5[1].set_title('Southern')
 
 ax[0].set_xlabel("$|$Med. Latitude$|$ ['']")
 ax[1].set_xlabel("$|$Med. Latitude$|$ ['']")
-ax3[2].set_xlabel("Time")
+ax3[2].set_xlabel("Time [UT]")
 ax5[0].set_xlabel("$|$Med. Latitude$|$ ['']")
 ax5[1].set_xlabel("$|$Med. Latitude$|$ ['']")
+ax6[2].set_xlabel("Time [UT]")
 
 ax[0].set_ylabel('Cumulative Fraction')
 ax2[0].set_ylabel('Cumulative Fraction')
@@ -289,8 +327,10 @@ ax[0].legend(loc='upper left',frameon=False,fontsize=18)
 ax2[0].legend(loc='upper left',frameon=False,fontsize=18)
 ax3[0].legend(loc='lower left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=18,handlelength=1)
 ax5[0].legend(loc='upper left',frameon=False,fontsize=18)
+ax6[0].legend(loc='upper left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=18,handlelength=1)
 
 fig.savefig( 'plots/ns_cumla_dis_medy.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig2.savefig('plots/ns_cat_cumla_dis_medy.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig3.savefig('plots/medy_v_time.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig5.savefig('plots/ns_cumla_dis_medy_comb12.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig6.savefig('plots/med_len_v_time.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
