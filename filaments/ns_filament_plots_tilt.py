@@ -9,13 +9,15 @@ mpl.rcParams['font.size'] = 24
 
 
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from fancy_plot import fancy_plot
 import pandas as pd
 import numpy as np
 from datetime import timedelta
+from shapely.wkt  import dumps, loads
 
 import scipy.stats as stats
-import statsmodels.api as sm
+#import statsmodels.api as sm
 
 #set up distribution in order
 def setup_dis(x,col='med_tilt'):
@@ -82,6 +84,10 @@ rng = pd.date_range('2010-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_ti
 
 #read in filament categories given in Brianna's code
 fil = pd.read_pickle('filament_catagories.pic')
+
+#test dynamic time warping
+time_warp = True
+if time_warp: import mlpy
 
 fil_dict = {}
 fil_fmt = 'fil{0:1d}'
@@ -272,6 +278,18 @@ fig3.subplots_adjust(hspace=0.001,wspace=0.001)
 fig8, ax8 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
 fig8.subplots_adjust(hspace=0.001,wspace=0.001)
 
+#plots for 1 and 2, 3, 5 versus time and ar PIL curvature
+fig10, ax10 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig10.subplots_adjust(hspace=0.001,wspace=0.001)
+
+#plots for 1 and 2, 3, 5 versus time and Sigmoid properties curvature
+fig11, ax11 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig11.subplots_adjust(hspace=0.001,wspace=0.001)
+
+#plots for 1 and 2, 3, 5 versus time and ar height
+fig12, ax12 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig12.subplots_adjust(hspace=0.001,wspace=0.001)
+
 #array of filament objects
 tilt_time = ['fil12','fil3','fil4']
 
@@ -309,8 +327,20 @@ for j,i in enumerate(tilt_time):
     tot_err_s = np.sqrt((mbs.med_tilt_std.values/np.sqrt(mbs.med_tilt_cnt.values))**2.)#+(mbs.med_tilt_mean.values/np.sqrt(mbs.med_tilt_cnt.size))**2.)
 
 
-    #make similar plots for sunspots and emerging flux with filaments
-    for rax in [ax3[j],ax8[j]]:
+    #Do dynamic time warping and plot the result
+    if ((i == 'fil4') & (time_warp)): 
+        dist, cost, path = mlpy.dtw_std(mbn.med_tilt_mean.dropna().abs().values,mbs.med_tilt_mean.dropna().abs().values,dist_only=False)
+        fig100,ax100 = plt.subplots()
+        plot1 = ax100.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest')
+        plot2 = ax100.plot(path[0], path[1], 'w')
+        xlim = ax100.set_xlim((-0.5, cost.shape[0]-0.5))
+        ylim = ax100.set_ylim((-0.5, cost.shape[1]-0.5))
+        fig100.savefig('plots/time_warp_fil4_tilt.png',bbox_pad=.1,bbox_inches='tight')
+        plt.close(fig100)
+ 
+
+    #make similar plots for sunspots and emerging flux and active regions with filaments
+    for rax in [ax3[j],ax8[j],ax10[j],ax11[j],ax12[j]]:
     #plot running mean
         rax.errorbar(mbn.index,mbn.med_tilt_mean,xerr=timedelta(days=14),yerr=tot_err_n,capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean ({0})'.format(sam))
         rax.errorbar(mbs.index,mbs.med_tilt_mean,xerr=timedelta(days=14),yerr=tot_err_s,capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
@@ -443,8 +473,178 @@ ax8[3].set_xlabel('Time [UTC]')
 
 fig8.savefig('plots/emerging_flux_time.png',bbox_pad=.1,bbox_inches='tight')
 
+###########################################
+###########################################
+#plots for Active region properties
+#Add sunspot number to output
+ar_nm = pd.read_pickle('active_regions/query_output/all_ar_20100522-20141130_real.pic')
 
-########################################################################################
+#sort index 
+ar_nm.sort_index(inplace=True)
+
+#Remove None columns in sunspots
+ar_nm = ar_nm[ar_nm.ar_numspots.astype(str) != 'None']
+
+#change ar_numspots to numeric
+ar_nm['ar_numspots'] = pd.to_numeric(ar_nm.ar_numspots)
+
+#create a copy to add datetime index back in
+ar_fn = ar_nm.copy()
+ar_fn.set_index(ar_fn.ar_noaanum,inplace=True)
+
+#Group by AR number and get the median value
+ar_nm = ar_nm.groupby('ar_noaanum').mean()
+
+#reset index for ar grouping
+ar_nm['event_starttime'] = pd.to_datetime(ar_fn[~ar_fn.index.duplicated(keep='first')].event_starttime)
+ar_nm.set_index('event_starttime',inplace=True)
+
+#cut to eruptions only above 30 degrees latitude 
+n_ar = ar_nm[ar_nm.hgs_y >  0.]
+s_ar = ar_nm[ar_nm.hgs_y < -0.]
+
+#parameter to compare with tilt
+#check = 'ar_polarity'
+#check = 'meanshearangle'
+#check = 'meaninclinationgamma' #same thing as shear angle
+#check = 'unsignedflux'
+#check = 'meanvertcurrentdensity'
+#check = 'ar_axislength'
+#check = 'meantwistalpha' #a couple bumps about a year before the filament tilt angles
+#check = 'highsheararea'
+#check = 'ar_neutrallength'
+#check = 'ar_polarity'
+check = 'ar_numspots'
+
+#bin up in 4W bins 
+bn_ar = real_resamp(n_ar,rng,col=check)
+bs_ar = real_resamp(s_ar,rng,col=check)
+
+#errors on sunspot number including counting
+tot_err_s = np.sqrt((bs_ar[check+'_std'].values/np.sqrt(bs_ar[check+'_cnt'].values))**2.)
+tot_err_n = np.sqrt((bn_ar[check+'_std'].values/np.sqrt(bn_ar[check+'_cnt'].values))**2.)
+
+#plot average height of emerging flux
+ax10[3].errorbar(bn_ar.index,np.abs(bn_ar[check+'_sum'].values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax10[3].errorbar(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax10[3].plot(bn_ar.index,np.abs(bn_ar[check+'_sum'].values),'-',color='red',label='Northern ({0})'.format(sam))
+ax10[3].plot(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),'--',color='black',label='Southern ({0})'.format(sam))
+
+fancy_plot(ax10[3])
+
+ax10[3].set_ylabel('Ave. Sun Spots [\#]')
+ax10[3].set_xlabel('Time [UTC]')
+
+fig10.savefig('plots/ar_sunspots_time.png',bbox_pad=.1,bbox_inches='tight')
+
+
+#Also check sunspot height using AR indentifier
+check = 'hgs_y'
+
+#bin up in 4W bins 
+bn_ar = real_resamp(n_ar,rng,col=check)
+bs_ar = real_resamp(s_ar,rng,col=check)
+
+#errors on sunspot number including counting
+tot_err_s = np.sqrt((bs_ar[check+'_std'].values/np.sqrt(bs_ar[check+'_cnt'].values))**2.)
+tot_err_n = np.sqrt((bn_ar[check+'_std'].values/np.sqrt(bn_ar[check+'_cnt'].values))**2.)
+
+#plot average height of emerging flux
+ax12[3].errorbar(bn_ar.index,np.abs(bn_ar[check+'_mean'].values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax12[3].errorbar(bs_ar.index,np.abs(bs_ar[check+'_mean'].values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax12[3].plot(bn_ar.index,np.abs(bn_ar[check+'_mean'].values),'-',color='red',label='Northern ({0})'.format(sam))
+ax12[3].plot(bs_ar.index,np.abs(bs_ar[check+'_mean'].values),'--',color='black',label='Southern ({0})'.format(sam))
+ax12[3].scatter(n_ar.index,np.abs(n_ar[check].values),marker='o',color='red',label=None)
+ax12[3].scatter(s_ar.index,np.abs(s_ar[check].values),marker='D',color='black',label=None)
+
+fancy_plot(ax12[3])
+
+ax12[3].set_ylabel('Ave. AR Lat. [Deg.]')
+ax12[3].set_xlabel('Time [UTC]')
+
+fig12.savefig('plots/ar_height_time.png',bbox_pad=.1,bbox_inches='tight')
+
+###########################################
+###########################################
+#
+
+###########################################
+###########################################
+#
+sg_nm = pd.read_pickle('sigmoids/query_output/all_sg_20101208-20141130.pic')
+#sort index 
+sg_nm.sort_index(inplace=True)
+
+#use only automatic sigmoids
+sg_nm = sg_nm[sg_nm.frm_humanflag == 'false']
+
+#HCR check (not sure of meaining but why not for now)
+sg_nm = sg_nm[sg_nm.hcr_checked == 'true']
+
+#Use 131 for observation for now
+sg_nm = sg_nm[sg_nm.obs_channelid == '131_THIN']
+
+#already cut to only eds observer but drive the point home
+sg_nm = sg_nm[sg_nm.kb_archivist == 'eds']
+
+#Cause a ~40% reduction in sample but I cant think of a fast way to combine sigmoid observations 
+#without using the active region number
+sg_nm = sg_nm[sg_nm.ar_noaanum > 1.]
+
+#manually calculate sigmoid tilt using theil slopes
+sg_nm['hpc_bbox_p'] = [loads(i) for i in sg_nm.hpc_bbox.values]
+sg_nm['sg_slope'] = [stats.theilslopes(i.exterior.coords.xy)[0] for i in sg_nm.hpc_bbox_p.values]
+sg_nm['sg_height'] = [np.ptp(i.exterior.coords.xy[1]) for i in sg_nm.hpc_bbox_p.values]
+
+#use the bounding box of the sigmoid to get a rough tilt 
+sg_nm['sg_tilt'] = -np.sin(sg_nm.sg_slope.values/sg_nm.sg_height.values)*180./np.pi
+
+#create a copy to add datetime index back in
+sg_fn = sg_nm.copy()
+sg_fn.set_index(sg_fn.ar_noaanum,inplace=True)
+
+
+#Group by AR number and get the median value
+sg_nm = sg_nm.groupby('ar_noaanum').median()
+
+#add datetime back in and set index
+sg_nm['event_starttime'] = pd.to_datetime(sg_fn[~sg_fn.index.duplicated(keep='first')].event_starttime)
+sg_nm.set_index('event_starttime',inplace=True)
+
+
+
+check = 'sg_tilt' 
+
+#cut to eruptions only above 30 degrees latitude 
+n_sg = sg_nm[sg_nm.hgs_y >  0.]
+s_sg = sg_nm[sg_nm.hgs_y < -0.]
+
+#bin up in 4W bins 
+bn_sg = real_resamp(n_sg,rng,col=check)
+bs_sg = real_resamp(s_sg,rng,col=check)
+
+#add errors
+tot_err_s = np.sqrt((bs_sg[check+'_std'].values/np.sqrt(bs_sg[check+'_cnt'].values))**2.)
+tot_err_n = np.sqrt((bn_sg[check+'_std'].values/np.sqrt(bn_sg[check+'_cnt'].values))**2.)
+
+#plot average height of emerging flux
+ax11[3].errorbar(bn_sg.index,bn_sg[check+'_mean'].values,yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax11[3].errorbar(bs_sg.index,bs_sg[check+'_mean'].values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax11[3].plot(bn_sg.index,bn_sg[check+'_mean'].values,'-',color='red',label='Northern ({0})'.format(sam))
+ax11[3].plot(bs_sg.index,bs_sg[check+'_mean'].values,'--',color='black',label='Southern ({0})'.format(sam))
+ax11[3].scatter(n_sg.index,n_sg[check].values,color='red',label=None)
+ax11[3].scatter(s_sg.index,s_sg[check].values,color='black',label=None)
+
+fancy_plot(ax11[3])
+
+ax11[3].set_ylabel('Sigmoid Tilt [Deg.]')
+ax11[3].set_xlabel('Time [UTC]')
+
+#ax11[3].set_ylim([0.0,2.])
+fig11.savefig('plots/sg_curvature_time.png',bbox_pad=.1,bbox_inches='tight')
+###########################################
+###########################################
+
 #Plot Cumulative distributions of filaments in times where there is a difference between north and south
 fig9, ax9 = plt.subplots(figsize=(8,8))
 
