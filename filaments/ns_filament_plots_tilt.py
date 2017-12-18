@@ -354,6 +354,47 @@ for j,i in enumerate(tilt_time):
         fancy_plot(rax)
         rax.set_ylim([-90.,90.])
 
+#Correlation or Anti-correlation in filament tilt for category 4
+# (2017/12/18 J. Prchlik)
+fig_at, ax_at = plt.subplots(nrows=2,figsize=(6,12))
+#fig_at.subplots_adjust(wspace=0.001,hspace=0.001)
+#ax_at[0].errorbar(mbs.med_tilt_mean,mbn.med_tilt_mean,xerr=tot_err_s,yerr=tot_err_n,capsize=3,barsabove=True,fmt='o',color='black')
+#ax_at[1].errorbar(mbs.med_tilt_mean,mbn.med_tilt_mean.abs(),xerr=tot_err_s,yerr=tot_err_n,capsize=3,barsabove=True,fmt='o',color='black')
+ax_at[0].scatter(mbs.med_tilt_mean,mbn.med_tilt_mean,color='black')
+ax_at[1].scatter(mbs.med_tilt_mean.abs(),mbn.med_tilt_mean.abs(),color='black')
+
+ax_at[0].set_xlabel('Mean Southern Tilt [Deg.]')
+ax_at[1].set_xlabel('$|$Mean$|$ Southern Tilt [Deg.]')
+ax_at[0].set_ylabel('Mean Northern Tilt [Deg.]')
+ax_at[1].set_ylabel('$|$Mean$|$ Northern Tilt [Deg.]')
+
+
+#add correlation coeoff
+x1 = mbs.med_tilt_mean.values
+x2 = mbs.med_tilt_mean.abs().values
+y1 = mbn.med_tilt_mean.values
+y2 = mbn.med_tilt_mean.abs().values
+use, = np.where((np.isfinite(x)) & (np.isfinite(y1)))
+r_tilt = stats.pearsonr(x1[use],y1[use])
+r_atilt = stats.pearsonr(x2[use],y2[use])
+
+#Add correlation to output 2017/12/18 J. Prchlik
+ax_at[0].text(-40.,60.,'r={0:4.3f}'.format(*r_tilt),fontsize=16,color='black')
+ax_at[1].text(-40.,60.,'r={0:4.3f}'.format(*r_atilt),fontsize=16,color='black')
+
+fancy_plot(ax_at[0])
+fancy_plot(ax_at[1])
+
+y_lim = [-50,85]
+ax_at[0].set_xlim(y_lim)
+ax_at[1].set_xlim(y_lim)
+ax_at[0].set_ylim(y_lim)
+ax_at[1].set_ylim(y_lim)
+
+
+fig_at.savefig('plots/fi_tilt_ns_comp.png',bbox_pad=.1,bbox_inches='tight')
+
+plt.close(fig_at)
 
 #Add sunspot number to output
 ss_nm = pd.read_pickle('sunspots/query_output/all_ss_20120101-20141130.pic')
