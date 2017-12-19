@@ -329,12 +329,62 @@ for j,i in enumerate(tilt_time):
 
     #Do dynamic time warping and plot the result
     if ((i == 'fil4') & (time_warp)): 
-        dist, cost, path = mlpy.dtw_std(mbn.med_tilt_mean.dropna().abs().values,mbs.med_tilt_mean.dropna().abs().values,dist_only=False)
+        import matplotlib.dates as mdates
+
         fig100,ax100 = plt.subplots()
-        plot1 = ax100.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest')
-        plot2 = ax100.plot(path[0], path[1], 'w')
-        xlim = ax100.set_xlim((-0.5, cost.shape[0]-0.5))
-        ylim = ax100.set_ylim((-0.5, cost.shape[1]-0.5))
+
+        #array to convert to dates for plotting time series from dtw
+        daterange = np.array([mbs.dropna().index.min(),mbs.dropna().index.max(),mbn.dropna().index.min(),mbn.dropna().index.max()])
+        date_num = mdates.date2num(daterange)
+
+
+        #Southern times
+        s_time = mdates.date2num(mbs.med_tilt_mean.dropna().index.to_pydatetime())
+        n_time = mdates.date2num(mbn.med_tilt_mean.dropna().index.to_pydatetime())
+
+        #get differneces in time
+        ds_t = np.diff(s_time)
+        dn_t = np.diff(n_time)
+
+        #Add last element twice
+        ds_t = np.append(ds_t,ds_t[-1])
+        dn_t = np.append(dn_t,dn_t[-1])
+
+        #calculate dtw
+        dist, cost, path = mlpy.dtw_std(mbn.med_tilt_mean.dropna().abs().values,mbs.med_tilt_mean.dropna().abs().values,dist_only=False)
+
+        #tell matplotlib x and y axis are dates
+        ax100.xaxis_date()
+        ax100.yaxis_date()
+
+        #plot dtw
+        plot1 = ax100.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest',
+                             extent=date_num,aspect='auto')
+        plot2 = ax100.plot(ds_t[path[1]]+s_time[path[1]], dn_t[path[0]]+n_time[path[0]], 'w')
+        plot4 = ax100.plot(ds_t[path[1]]+s_time[path[1]], dn_t[path[0]]+n_time[path[0]], 'b',linewidth=.5)
+        plot3 = ax100.plot([date_num[0],date_num[1]],[date_num[2],date_num[3]], 'r')
+
+
+        #plot axis back it YYYY-MM-DD format
+        date_format = mdates.DateFormatter('%Y-%m')
+
+        #change J date describtion on axis
+        ax100.xaxis.set_major_formatter(date_format)
+        ax100.yaxis.set_major_formatter(date_format)
+
+        #set x and y limits 
+        ax100.set_xlim([date_num[0],date_num[1]])
+        ax100.set_ylim([date_num[2],date_num[3]])
+
+        #rotate to 45 degrees
+        fig100.autofmt_xdate()
+
+        #set up labels
+        ax100.set_xlabel('Southern Time')
+        ax100.set_ylabel('Northern Time')
+
+        #xlim = ax100.set_xlim((-0.5, cost.shape[0]-0.5))
+        #ylim = ax100.set_ylim((-0.5, cost.shape[1]-0.5))
         fig100.savefig('plots/time_warp_fil4_tilt.png',bbox_pad=.1,bbox_inches='tight')
         plt.close(fig100)
  
@@ -704,12 +754,6 @@ ax9.plot(n_cat4_s.med_tilt,n_cat4_s.frac,label='North Similar  ' )
 ax9.plot(s_cat4_d.med_tilt,s_cat4_d.frac,label='South Different' )
 ax9.plot(s_cat4_s.med_tilt,s_cat4_s.frac,label='South Similar  ' )
 
-
-
-n_cat4_d.med_tilt
-n_cat4_s.med_tilt
-s_cat4_d.med_tilt
-s_cat4_s.med_tilt
 
 #Add A-D stats to plot
 #calculate and plot A-D stats
