@@ -213,12 +213,12 @@ for j,i in enumerate(fil_keys):
 
         #setup d3 and d4 distributions for comparision
         d3 = fil_dict['fil3'][0]
-        d3.set_index(d3['track_id'],inplace='true')
+        d3.set_index(d3['track_id'],inplace=True)
         d3.sort_index(inplace=True)
         d3 = d3[~d3.index.duplicated(keep='first')]
 
         d4 = fil_dict['fil4'][0]
-        d4.set_index(d4['track_id'],inplace='true')
+        d4.set_index(d4['track_id'],inplace=True)
         d4.sort_index(inplace=True)
         d4 = d4[~d4.index.duplicated(keep='first')]
 
@@ -358,10 +358,11 @@ for j,i in enumerate(tilt_time):
         ax100.yaxis_date()
 
         #plot dtw
-        plot1 = ax100.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest',
-                             extent=date_num,aspect='auto')
-        plot2 = ax100.plot(ds_t[path[1]]+s_time[path[1]], dn_t[path[0]]+n_time[path[0]], 'w')
-        plot4 = ax100.plot(ds_t[path[1]]+s_time[path[1]], dn_t[path[0]]+n_time[path[0]], 'b',linewidth=.5)
+        #Removed Cost matrix 2018/01/19 J. Prchlik
+        #plot1 = ax100.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest',
+        #                     extent=date_num,aspect='auto')
+        #plot2 = ax100.plot(ds_t[path[1]]+s_time[path[1]], dn_t[path[0]]+n_time[path[0]], 'w')
+        plot4 = ax100.plot(ds_t[path[1]]+s_time[path[1]], dn_t[path[0]]+n_time[path[0]], 'b',linewidth=3)
         plot3 = ax100.plot([date_num[0],date_num[1]],[date_num[2],date_num[3]], 'r')
 
 
@@ -385,8 +386,6 @@ for j,i in enumerate(tilt_time):
 
         #xlim = ax100.set_xlim((-0.5, cost.shape[0]-0.5))
         #ylim = ax100.set_ylim((-0.5, cost.shape[1]-0.5))
-        fig100.savefig('plots/time_warp_fil4_tilt.png',bbox_pad=.1,bbox_inches='tight')
-        plt.close(fig100)
  
 
     #make similar plots for sunspots and emerging flux and active regions with filaments
@@ -405,7 +404,13 @@ for j,i in enumerate(tilt_time):
         rax.set_ylim([-90.,90.])
 
 
+#Take advatage of the fact I use filament 4 last in the looping and find the correlations between sunspot height and filament 4 tilts
+fig6, ax6 = plt.subplots()
+
 #Add sunspot number to output
+#### 2018/01/19 Added sunspot number from NOAA to plots
+ss_nm_hist = pd.read_csv('/Volumes/Pegasus/jprchlik/dscovr/solar_wind_events/sun_spot_number/SN_m_tot_V2.0.txt')
+
 ss_nm = pd.read_pickle('sunspots/query_output/all_ss_20120101-20141130.pic')
 #cut to eruptions only above 30 degrees latitude 
 n_ss = ss_nm[ss_nm.hgs_y >  0.]
@@ -428,8 +433,6 @@ ax3[3].plot(bn_ss.index,np.abs(bn_ss.hgs_y_mean.values),'-',color='red',label='N
 ax3[3].plot(bs_ss.index,np.abs(bs_ss.hgs_y_mean.values),'--',color='black',label='Southern ({0})'.format(sam))
 
 
-#Take advatage of the fact I use filament 4 last in the looping and find the correlations between sunspot height and filament 4 tilts
-fig6, ax6 = plt.subplots()
 #Northern Matching
 #ax6.scatter(np.abs(bn_ss.hgs_y_mean.values),np.abs(mbn.med_tilt_mean),color='red',marker='o',label='North')
 #ax6.scatter(np.abs(bn_ss.hgs_y_mean.values)[1:],np.abs(mbn.med_tilt_mean.values[:-1]),color='red',marker='<',label='FI -14 days')
@@ -589,6 +592,35 @@ ax10[3].set_xlabel('Time [UTC]')
 fig10.savefig('plots/ar_sunspots_time.png',bbox_pad=.1,bbox_inches='tight')
 plt.close(fig10) 
 
+#Add Sunspot number in North and South to DTW plots
+#2018/01/19 J. Prchlik
+
+#Calculate DTW
+dist_ar, cost_ar, path_ar = mlpy.dtw_std(bn_ar.ar_numspots_sum.dropna().abs().values,bs_ar.ar_numspots_sum.dropna().abs().values,dist_only=False)
+#Southern times
+s_ar_time = mdates.date2num(bs_ar.ar_numspots_sum.dropna().index.to_pydatetime())
+n_ar_time = mdates.date2num(bn_ar.ar_numspots_sum.dropna().index.to_pydatetime())
+
+#get differneces in ar time
+ds_ar_t = np.diff(s_ar_time)
+dn_ar_t = np.diff(n_ar_time)
+
+#Add last element twice
+ds_ar_t = np.append(ds_ar_t,ds_ar_t[-1])
+dn_ar_t = np.append(dn_ar_t,dn_ar_t[-1])
+
+plot7 = ax100.plot(ds_ar_t[path_ar[1]]+s_ar_time[path_ar[1]], dn_ar_t[path_ar[0]]+n_ar_time[path_ar[0]], 'black',linewidth=3)
+
+ax100.set_xlim([s_ar_time[0],s_ar_time[-1]])
+ax100.set_ylim([n_ar_time[0],n_ar_time[-1]])
+
+
+ax100.grid(True,color='gray',linestyle='--')
+
+fig100.savefig('plots/time_warp_fil4_tilt.png',bbox_pad=.1,bbox_inches='tight')
+plt.close(fig100)
+
+
 #Also check sunspot height using AR indentifier
 check = 'hgs_y'
 
@@ -737,10 +769,10 @@ s_cat4_s = s_cat4[s_s1:e_s1]
 
 #plot cumlative distributions
 #first sort
-n_cat4_d.sort('med_tilt',inplace=True)
-n_cat4_s.sort('med_tilt',inplace=True)
-s_cat4_d.sort('med_tilt',inplace=True)
-s_cat4_s.sort('med_tilt',inplace=True)
+n_cat4_d.sort_values('med_tilt',inplace=True)
+n_cat4_s.sort_values('med_tilt',inplace=True)
+s_cat4_d.sort_values('med_tilt',inplace=True)
+s_cat4_s.sort_values('med_tilt',inplace=True)
 
 #then create cumulative fraction
 n_cat4_d['frac'] = np.arange(0,len(n_cat4_d))/float(len(n_cat4_d))
