@@ -14,3 +14,11 @@ EF_NegEquivRadius	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	
 EF_LengthUnit	string	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Units for EF_AxisLength
 EF_AspectRatio	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	(EF_PosEquivRadius+EF_NegEquivRadius)/(2*EF_AxisLength)
 EF_ProximityRatio	float	---	---	---	---	---	---	---	---	---	---	---	---	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	(EF_PosEquivRadius-EF_NegEquivRadius)/(2*EF_AxisLength)
+
+
+AR_AxisLength	float	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Axis length (bipole separation distance)
+AR_LengthUnit	string	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Units for AR_AxisLength and AR_NeutralLength
+AR_SumPosSignedFlux	float	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Total positive signed flux
+AR_SumNegSignedFlux	float	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Total negative signed flux (negative number)
+AR_NeutralLength	float	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	The total length of polarity separation line segments within the AR
+AR_PILCurvature	float	opt	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	---	Dimensionless curvature of main PIL (PIL length / direct distance between endpoints)
