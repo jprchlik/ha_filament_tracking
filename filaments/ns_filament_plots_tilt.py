@@ -409,73 +409,84 @@ fig6, ax6 = plt.subplots()
 
 #Add sunspot number to output
 #### 2018/01/19 Added sunspot number from NOAA to plots
-ss_nm_hist = pd.read_csv('/Volumes/Pegasus/jprchlik/dscovr/solar_wind_events/sun_spot_number/SN_m_tot_V2.0.txt')
+#ss_nm_hist = pd.read_csv('/Volumes/Pegasus/jprchlik/dscovr/solar_wind_events/sun_spot_number/SN_m_tot_V2.0.txt')
+#ss_nm_hist = pd.read_csv('/Volumes/Pegasus/jprchlik/dscovr/solar_wind_events/sun_spot_number/SN_m_tot_V2.0.txt')
+#from royal Belgium observatory so you know its good 2018/02/02 J. Prchlik
+ss_nm = pd.read_csv('sunspots/SN_m_hem_V2.0.csv',names=['year','month','year_frac','t_ss','n_ss','s_ss','t_ss_unc','n_ss_unc','s_ss_unc','t_ss_c','n_ss_t','s_ss_t'],sep=';',index_col=False)
+ss_nm['time_dt'] =  pd.to_datetime(ss_nm.year.astype(str)+'/'+ss_nm.month.astype(str)+'/15')
+ss_nm.set_index(ss_nm.time_dt,inplace=True)
 
-ss_nm = pd.read_pickle('sunspots/query_output/all_ss_20120101-20141130.pic')
-#cut to eruptions only above 30 degrees latitude 
-n_ss = ss_nm[ss_nm.hgs_y >  0.]
-s_ss = ss_nm[ss_nm.hgs_y < -0.]
+#ss_nm = pd.read_pickle('sunspots/query_output/all_ss_20120101-20141130.pic')
+##cut to eruptions only above 30 degrees latitude 
+#n_ss = ss_nm[ss_nm.hgs_y >  0.]
+#s_ss = ss_nm[ss_nm.hgs_y < -0.]
+#
 
-
-#bin up in 4W bins 
-bn_ss = real_resamp(n_ss,rng,col='hgs_y')
-bs_ss = real_resamp(s_ss,rng,col='hgs_y')
-
-#errors on sunspot number including counting
-tot_err_s = np.sqrt((bs_ss.hgs_y_std.values/np.sqrt(bs_ss.hgs_y_cnt.values))**2.)#+(bs_ss.hgs_y_mean.values/np.sqrt(bs_ss.hgs_y_cnt.size))**2) #errors due to counting
-tot_err_n = np.sqrt((bn_ss.hgs_y_std.values/np.sqrt(bn_ss.hgs_y_cnt.values))**2.)#+(bn_ss.hgs_y_mean.values/np.sqrt(bn_ss.hgs_y_cnt.size))**2) #errors due to counting
+##bin up in 4W bins 
+#bn_ss = real_resamp(n_ss,rng,col='hgs_y')
+#bs_ss = real_resamp(s_ss,rng,col='hgs_y')
+#
+##errors on sunspot number including counting
+#tot_err_s = np.sqrt((bs_ss.hgs_y_std.values/np.sqrt(bs_ss.hgs_y_cnt.values))**2.)#+(bs_ss.hgs_y_mean.values/np.sqrt(bs_ss.hgs_y_cnt.size))**2) #errors due to counting
+#tot_err_n = np.sqrt((bn_ss.hgs_y_std.values/np.sqrt(bn_ss.hgs_y_cnt.values))**2.)#+(bn_ss.hgs_y_mean.values/np.sqrt(bn_ss.hgs_y_cnt.size))**2) #errors due to counting
+tot_err_s = ss_nm.s_ss_unc
+tot_err_n = ss_nm.n_ss_unc
                      
                      
 #plot average height of sunspots
-ax3[3].errorbar(bn_ss.index,np.abs(bn_ss.hgs_y_mean.values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
-ax3[3].errorbar(bs_ss.index,np.abs(bs_ss.hgs_y_mean.values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
-ax3[3].plot(bn_ss.index,np.abs(bn_ss.hgs_y_mean.values),'-',color='red',label='Northern ({0})'.format(sam))
-ax3[3].plot(bs_ss.index,np.abs(bs_ss.hgs_y_mean.values),'--',color='black',label='Southern ({0})'.format(sam))
+ax3[3].errorbar(ss_nm.index,ss_nm.n_ss.values,yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax3[3].errorbar(ss_nm.index,ss_nm.s_ss.values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax3[3].plot(ss_nm.index,ss_nm.n_ss.values,'-',color='red',label='Northern ({0})'.format(sam))
+ax3[3].plot(ss_nm.index,ss_nm.s_ss.values,'--',color='black',label='Southern ({0})'.format(sam))
 
 
 #Northern Matching
 #ax6.scatter(np.abs(bn_ss.hgs_y_mean.values),np.abs(mbn.med_tilt_mean),color='red',marker='o',label='North')
 #ax6.scatter(np.abs(bn_ss.hgs_y_mean.values)[1:],np.abs(mbn.med_tilt_mean.values[:-1]),color='red',marker='<',label='FI -14 days')
-ax6.scatter(np.abs(bn_ss.hgs_y_mean.values)[:-1],-(mbn.med_tilt_mean.values[1:]),color='red',marker='o',label='Northern (FI +28 days)')
+#Commented out J. prchlik 2018/02/02
+#ax6.scatter(np.abs(bn_ss.hgs_y_mean.values)[:-1],-(mbn.med_tilt_mean.values[1:]),color='red',marker='o',label='Northern (FI +28 days)')
 
 #Southern Matching
 #ax6.scatter(np.abs(bs_ss.hgs_y_mean.values),np.abs(mbs.med_tilt_mean),color='black',marker='o',label='Southern')
 #ax6.scatter(np.abs(bs_ss.hgs_y_mean.values)[1:],np.abs(mbs.med_tilt_mean.values[:-1]),color='black',marker='<',label='FI -14 days')
-ax6.scatter(np.abs(bs_ss.hgs_y_mean.values)[:-1],(mbs.med_tilt_mean.values[1:]),color='black',marker='o',label='Southern (FI +28 days)')
+#Commented out J. prchlik 2018/02/02
+#ax6.scatter(np.abs(bs_ss.hgs_y_mean.values)[:-1],(mbs.med_tilt_mean.values[1:]),color='black',marker='o',label='Southern (FI +28 days)')
 
-x = np.concatenate([np.abs(bn_ss.hgs_y_mean.values)[:-1],np.abs(bs_ss.hgs_y_mean.values)[:-1]])
-y = np.concatenate([-mbn.med_tilt_mean.values[1:],mbs.med_tilt_mean.values[1:]])
-
-use, = np.where((np.isfinite(x)) & (np.isfinite(y)))
-
-r_tl_ss = stats.pearsonr(x[use],y[use])
-
-ax6.text(5.,-50.,'r={0:4.3f}'.format(*r_tl_ss),fontsize=16,color='black')
-
-ax6.set_xlim([4.,25.])
-
-ax6.set_xlabel('$|$Mean SS Lat.$|$ [deg.]')
-ax6.set_ylabel('Mean FI Tilt [deg.]')
+#Commented block out J. prchlik 2018/02/02
+#x = np.concatenate([np.abs(bn_ss.hgs_y_mean.values)[:-1],np.abs(bs_ss.hgs_y_mean.values)[:-1]])
+#y = np.concatenate([-mbn.med_tilt_mean.values[1:],mbs.med_tilt_mean.values[1:]])
+#
+#use, = np.where((np.isfinite(x)) & (np.isfinite(y)))
+#
+#r_tl_ss = stats.pearsonr(x[use],y[use])
+#
+#ax6.text(5.,-50.,'r={0:4.3f}'.format(*r_tl_ss),fontsize=16,color='black')
+#
+#ax6.set_xlim([4.,25.])
+#
+#ax6.set_xlabel('$|$Mean SS Lat.$|$ [deg.]')
+#ax6.set_ylabel('Mean FI Tilt [deg.]')
 
 
 ##
 # plot the difference between sunspot height and filament tilt in the N and S
-fig7, ax7 = plt.subplots()
-
-#get error including number using Poisson stats
-tot_err_x = np.sqrt((bs_ss.hgs_y_std.values/np.sqrt(bs_ss.hgs_y_cnt.values))**2.+(bn_ss.hgs_y_std.values/np.sqrt(bn_ss.hgs_y_cnt.values))**2.)#+
-                     #(bs_ss.hgs_y_mean.values/np.sqrt(bs_ss.hgs_y_cnt.size))**2+ #errors due to counting
-                     #(bn_ss.hgs_y_mean.values/np.sqrt(bn_ss.hgs_y_cnt.size))**2) #errors due to counting
-tot_err_y = np.sqrt((mbs.med_tilt_std.values/np.sqrt(mbs.med_tilt_cnt.values))**2.+(mbn.med_tilt_std.values/np.sqrt(mbn.med_tilt_cnt.values))**2.)#+
-                     #(mbs.med_tilt_mean.values/np.sqrt(mbs.med_tilt_cnt.size))**2+ #errors due to counting
-                     #(mbn.med_tilt_mean.values/np.sqrt(mbn.med_tilt_cnt.size))**2) #errors due to counting
-
-ax7.scatter(bn_ss.hgs_y_mean.values+bs_ss.hgs_y_mean.values,mbn.med_tilt_mean.values-mbs.med_tilt_mean.values,color='black',marker='o')
-ax7.errorbar(bn_ss.hgs_y_mean.values+bs_ss.hgs_y_mean.values,mbn.med_tilt_mean.values-mbs.med_tilt_mean.values,color='black',
-             yerr=tot_err_y,xerr=tot_err_x,capsize=3,barsabove=True,linewidth=3,fmt='o')
-
-ax7.set_ylabel('Diff. Tilt (N-S) [deg.]')
-ax7.set_xlabel('Diff. SS Lat. (N-S) [deg.]')
+#Commented block out J. prchlik 2018/02/02
+###fig7, ax7 = plt.subplots()
+###
+####get error including number using Poisson stats
+###tot_err_x = np.sqrt((bs_ss.hgs_y_std.values/np.sqrt(bs_ss.hgs_y_cnt.values))**2.+(bn_ss.hgs_y_std.values/np.sqrt(bn_ss.hgs_y_cnt.values))**2.)#+
+###                     #(bs_ss.hgs_y_mean.values/np.sqrt(bs_ss.hgs_y_cnt.size))**2+ #errors due to counting
+###                     #(bn_ss.hgs_y_mean.values/np.sqrt(bn_ss.hgs_y_cnt.size))**2) #errors due to counting
+###tot_err_y = np.sqrt((mbs.med_tilt_std.values/np.sqrt(mbs.med_tilt_cnt.values))**2.+(mbn.med_tilt_std.values/np.sqrt(mbn.med_tilt_cnt.values))**2.)#+
+###                     #(mbs.med_tilt_mean.values/np.sqrt(mbs.med_tilt_cnt.size))**2+ #errors due to counting
+###                     #(mbn.med_tilt_mean.values/np.sqrt(mbn.med_tilt_cnt.size))**2) #errors due to counting
+###
+###ax7.scatter(bn_ss.hgs_y_mean.values+bs_ss.hgs_y_mean.values,mbn.med_tilt_mean.values-mbs.med_tilt_mean.values,color='black',marker='o')
+###ax7.errorbar(bn_ss.hgs_y_mean.values+bs_ss.hgs_y_mean.values,mbn.med_tilt_mean.values-mbs.med_tilt_mean.values,color='black',
+###             yerr=tot_err_y,xerr=tot_err_x,capsize=3,barsabove=True,linewidth=3,fmt='o')
+###
+###ax7.set_ylabel('Diff. Tilt (N-S) [deg.]')
+###ax7.set_xlabel('Diff. SS Lat. (N-S) [deg.]')
 
 
 ###############
@@ -1001,8 +1012,8 @@ fancy_plot(ax4[0])
 fancy_plot(ax4[1])
 fancy_plot(ax5[0])
 fancy_plot(ax5[1])
-fancy_plot(ax6)
-fancy_plot(ax7)
+#fancy_plot(ax6)
+#fancy_plot(ax7)
 
 
 ax[0].legend(loc='upper left',frameon=False,fontsize=18)
@@ -1013,6 +1024,9 @@ ax4[0].legend(loc='lower right',frameon=False,fontsize=18)
 ax5[0].legend(loc='upper left',frameon=False,fontsize=18)
 ax6.legend(loc='lower right',scatterpoints=1,handletextpad=-0.112,frameon=False,fontsize=12)
 
+#set plot range sunsplot pot
+ax3[0].set_xlim([datetime(2011,1,1),datetime(2015,2,1)])
+
 fig.savefig( 'plots/ns_cumla_dis_tilt.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig1.savefig('plots/med_tilt_v_med_lat.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig2.savefig('plots/ns_cat_cumla_dis_tilt.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
@@ -1020,4 +1034,4 @@ fig3.savefig('plots/tilt_v_time_w_ss.png',bbox_pad=.1,bbox_inches='tight',fontsi
 fig4.savefig('plots/ns_med_tilt_v_med_lat.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig5.savefig('plots/ns_cumla_dis_tilt_comb12.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 #fig6.savefig('plots/ns_tilt_ss_height_fil4.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
-fig7.savefig('plots/ns_diff_tilt_diff_ss_height_fil4.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+#fig7.savefig('plots/ns_diff_tilt_diff_ss_height_fil4.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
