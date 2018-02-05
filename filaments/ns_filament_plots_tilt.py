@@ -13,7 +13,7 @@ import matplotlib.cm as cm
 from fancy_plot import fancy_plot
 import pandas as pd
 import numpy as np
-from datetime import timedelta
+from datetime import timedelta,datetime
 from shapely.wkt  import dumps, loads
 
 import scipy.stats as stats
@@ -608,8 +608,6 @@ plt.close(fig10)
 #Switch to Belgium Sunspot number 2018/02/05  J. Prchlik
 
 #Calculate DTW
-ax3[3].errorbar(ss_nm.index,ss_nm.n_ss.values,yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
-ax3[3].errorbar(ss_nm.index,ss_nm.s_ss.values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
 dist_ar, cost_ar, path_ar = mlpy.dtw_std(ss_nm.n_ss.dropna().abs().values,ss_nm.s_ss.dropna().abs().values,dist_only=False)
 #Southern times
 s_ar_time = mdates.date2num(ss_nm.s_ss.dropna().index.to_pydatetime())
@@ -625,8 +623,12 @@ dn_ar_t = np.append(dn_ar_t,dn_ar_t[-1])
 
 plot7 = ax100.plot(ds_ar_t[path_ar[1]]+s_ar_time[path_ar[1]], dn_ar_t[path_ar[0]]+n_ar_time[path_ar[0]], 'black',linewidth=3)
 
-ax100.set_xlim([s_ar_time[0],s_ar_time[-1]])
-ax100.set_ylim([n_ar_time[0],n_ar_time[-1]])
+#ax100.set_xlim([s_ar_time[0],s_ar_time[-1]])
+#ax100.set_ylim([n_ar_time[0],n_ar_time[-1]])
+#manually show plotted range
+time_range = [datetime(2010,6,1),datetime(2015,2,1)]
+ax100.set_xlim(time_range)
+ax100.set_ylim(time_range)
 
 
 ax100.grid(True,color='gray',linestyle='--')
