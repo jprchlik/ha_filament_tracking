@@ -607,26 +607,21 @@ plt.close(fig10)
 #2018/01/19 J. Prchlik
 #Switch to Belgium Sunspot number 2018/02/05  J. Prchlik
 
+#Cut DTW range down 2018/02/05
+
 #Calculate DTW
-dist_ar, cost_ar, path_ar = mlpy.dtw_std(ss_nm.n_ss.dropna().abs().values,ss_nm.s_ss.dropna().abs().values,dist_only=False)
+dist_ar, cost_ar, path_ar = mlpy.dtw_std(ss_nm['2011/06/01':'2015/06/01'].n_ss.abs().values,ss_nm['2011/06/01':'2015/06/01'].s_ss.abs().values,dist_only=False)
 #Southern times
-s_ar_time = mdates.date2num(ss_nm.s_ss.dropna().index.to_pydatetime())
-n_ar_time = mdates.date2num(ss_nm.n_ss.dropna().index.to_pydatetime())
+s_ar_time = mdates.date2num(ss_nm['2011/06/01':'2015/06/01'].iloc[path_ar[1],:].index.to_pydatetime())
+n_ar_time = mdates.date2num(ss_nm['2011/06/01':'2015/06/01'].iloc[path_ar[0],:].index.to_pydatetime())
 
-#get differneces in ar time
-ds_ar_t = np.diff(s_ar_time)
-dn_ar_t = np.diff(n_ar_time)
 
-#Add last element twice
-ds_ar_t = np.append(ds_ar_t,ds_ar_t[-1])
-dn_ar_t = np.append(dn_ar_t,dn_ar_t[-1])
-
-plot7 = ax100.plot(ds_ar_t[path_ar[1]]+s_ar_time[path_ar[1]], dn_ar_t[path_ar[0]]+n_ar_time[path_ar[0]], 'black',linewidth=3)
+plot7 = ax100.plot(s_ar_time, n_ar_time,'black',linewidth=3)
 
 #ax100.set_xlim([s_ar_time[0],s_ar_time[-1]])
 #ax100.set_ylim([n_ar_time[0],n_ar_time[-1]])
 #manually show plotted range
-time_range = [datetime(2010,6,1),datetime(2015,2,1)]
+time_range = [datetime(2011,6,1),datetime(2015,6,1)]
 ax100.set_xlim(time_range)
 ax100.set_ylim(time_range)
 
