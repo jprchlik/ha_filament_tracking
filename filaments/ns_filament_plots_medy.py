@@ -16,11 +16,11 @@ import statsmodels.api as sm
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-import sunpy.coordinates
+from sunpy.coordinates import frames
 
 #create element for cumlative distribution
 def setup_dis(x,col='med_l'):
-    x.set_index(x['track_id'],inplace='true')
+    x.set_index(x['track_id'],inplace=True)
     x.sort_values(by=col,inplace=True)
     x[len(x)] = x.iloc[-1]
     x['dis']  = np.linspace(0.,1.,len(x))
@@ -67,25 +67,27 @@ sam = '4W'
 rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
 
 #read in filament categories file
-fil = pd.read_pickle('filament_catagories.pic')
+fil = pd.read_pickle('filament_categories_hgs_mean_l.pic')
 
 #create hgs mean latitude column 2018/02/05 J. Prchlik
-fil['med_l'] = [SkyCoord(0*u.arcsec, fil.med_l.values[i]*u.arcsec,
-                obstime=fil.event_starttime.values[i],
-                frame='helioprojective').transform_to('heliographic_carrington').lon.value for i in range(len(fil))]
-
-
-#add summed length column
-t_fil = fil.groupby(['track_id','event_starttime'])['fi_length'].sum()
-
-#remerg t_fil values
-fil = fil.merge(t_fil.to_frame(),how='left',left_on=['track_id','event_starttime'],right_index=True,suffixes=('','_summed'))
-
-#get median values of fi_length_summed
-t_fil = fil.groupby(['track_id'])['fi_length_summed'].median()
-
-#remerg t_fil values
-fil = fil.merge(t_fil.to_frame(),how='left',left_on=['track_id'],right_index=True,suffixes=('','_med'))
+####Create new pickle file filament_categories_hgs_mean_l.pic
+####fil['med_l'] = np.nan
+####fil.loc[:,'med_l'] = [SkyCoord(0*u.arcsec, fil.med_y.values[i]*u.arcsec,
+####                obstime=fil.event_starttime.values[i],
+####                frame=frames.Helioprojective).transform_to(frames.HeliographicStonyhust).lat.value for i in range(len(fil))]
+####
+####
+#####add summed length column
+####t_fil = fil.groupby(['track_id','event_starttime'])['fi_length'].sum()
+####
+#####remerg t_fil values
+####fil = fil.merge(t_fil.to_frame(),how='left',left_on=['track_id','event_starttime'],right_index=True,suffixes=('','_summed'))
+####
+#####get median values of fi_length_summed
+####t_fil = fil.groupby(['track_id'])['fi_length_summed'].median()
+####
+#####remerg t_fil values
+####fil = fil.merge(t_fil.to_frame(),how='left',left_on=['track_id'],right_index=True,suffixes=('','_med'))
 
 fil_dict = {}
 fil_fmt = 'fil{0:1d}'
@@ -156,7 +158,7 @@ for j,i in enumerate(fil_keys):
     ax2[j].text(100,.15,'p(KS2) = {0:5.4f}'.format(k2[-1]),fontsize=18)
     ax2[j].set_title(d[4])
     ax2[j].set_xlabel(r"$|$Med. Latitude$|$ [Deg.]")
-    ax2[j].set_xlim([80,900])
+    ax2[j].set_xlim([0,90])
     fancy_plot(ax2[j])
 
 
@@ -191,11 +193,11 @@ for j,i in enumerate(fil_keys):
 
         #setup d3 and d4 distributions for comparision
         d3 = fil_dict['fil3'][0]
-        d3.set_index(d3['track_id'],inplace='true')
+        d3.set_index(d3['track_id'],inplace=True)
         d3 = d3[~d3.index.duplicated(keep='first')]
 
         d4 = fil_dict['fil4'][0]
-        d4.set_index(d4['track_id'],inplace='true')
+        d4.set_index(d4['track_id'],inplace=True)
         d4 = d4[~d4.index.duplicated(keep='first')]
 
         #break d3 and d4 into frames of north and south
@@ -328,8 +330,8 @@ ax2[2].set_ylabel('Cumulative Fraction')
 ax5[0].set_ylabel('Cumulative Fraction')
 
 #set xlim for cumlative distribution plots
-ax5[0].set_xlim([50.,1000.])
-ax5[1].set_xlim([50.,1000.])
+ax5[0].set_xlim([0.,90.])
+ax5[1].set_xlim([0.,90.])
 
 
 fancy_plot(ax[0])
