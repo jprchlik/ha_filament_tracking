@@ -353,6 +353,10 @@ for j,i in enumerate(tilt_time):
         #calculate dtw
         dist, cost, path = mlpy.dtw_std(mbn.med_tilt_mean.dropna().abs().values,mbs.med_tilt_mean.dropna().abs().values,dist_only=False)
 
+        #variabiles to plot dtw path 
+        n_time = mdates.date2num(mbn.med_tilt_mean.dropna().index[path[0]].to_pydatetime())
+        s_time = mdates.date2num(mbs.med_tilt_mean.dropna().index[path[1]].to_pydatetime())
+
         #tell matplotlib x and y axis are dates
         ax100.xaxis_date()
         ax100.yaxis_date()
@@ -362,7 +366,8 @@ for j,i in enumerate(tilt_time):
         #plot1 = ax100.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest',
         #                     extent=date_num,aspect='auto')
         #plot2 = ax100.plot(ds_t[path[1]]+s_time[path[1]], dn_t[path[0]]+n_time[path[0]], 'w')
-        plot4 = ax100.plot(ds_t[path[1]]+s_time[path[1]], dn_t[path[0]]+n_time[path[0]], 'b',linewidth=3)
+        #plot4 = ax100.plot(ds_t[path[1]]+s_time[path[1]], dn_t[path[0]]+n_time[path[0]], 'b',linewidth=3)
+        plot4 = ax100.plot(s_time,n_time, 'b',linewidth=3)
         plot3 = ax100.plot([date_num[0],date_num[1]],[date_num[2],date_num[3]], 'r')
 
 
