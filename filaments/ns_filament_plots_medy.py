@@ -155,7 +155,7 @@ for j,i in enumerate(fil_keys):
     if ad[-1] < 1.0: ax2[j].text(100,.1,'p(A-D) = {0:5.4f}'.format(ad[-1]),fontsize=18)
     ax2[j].text(100,.15,'p(KS2) = {0:5.4f}'.format(k2[-1]),fontsize=18)
     ax2[j].set_title(d[4])
-    ax2[j].set_xlabel(r"$|$Med. Latitude$|$ ['']")
+    ax2[j].set_xlabel(r"$|$Med. Latitude$|$ [Deg.]")
     ax2[j].set_xlim([80,900])
     fancy_plot(ax2[j])
 
@@ -275,7 +275,7 @@ for j,i in enumerate(tilt_time):
     ax3[j].scatter(bn.index,bn.med_l,color='red',marker='o',label='Northern')
     ax3[j].scatter(bs.index,-bs.med_l,color='black',marker='D',label='Southern')
     #Y title
-    ax3[j].set_ylabel("$|$Med. Lat.$|$ ['']\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2').replace('allf','All')))
+    ax3[j].set_ylabel("$|$Med. Lat.$|$ [Deg.]\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2').replace('allf','All')))
     fancy_plot(ax3[j])
     ax3[j].set_ylim([0.,990.])
     fancy_plot(ax3[j])
@@ -314,11 +314,11 @@ ax[1].set_title('Southern')
 ax5[0].set_title('Northern')
 ax5[1].set_title('Southern')
 
-ax[0].set_xlabel("$|$Med. Latitude$|$ ['']")
-ax[1].set_xlabel("$|$Med. Latitude$|$ ['']")
+ax[0].set_xlabel("$|$Med. Latitude$|$ [Deg.]")
+ax[1].set_xlabel("$|$Med. Latitude$|$ [Deg.]")
 ax3[2].set_xlabel("Time [UT]")
-ax5[0].set_xlabel("$|$Med. Latitude$|$ ['']")
-ax5[1].set_xlabel("$|$Med. Latitude$|$ ['']")
+ax5[0].set_xlabel("$|$Med. Latitude$|$ [Deg.]")
+ax5[1].set_xlabel("$|$Med. Latitude$|$ [Deg.]")
 ax6[2].set_xlabel("Time [UT]")
 
 ax[0].set_ylabel('Cumulative Fraction')
