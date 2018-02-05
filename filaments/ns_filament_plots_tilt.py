@@ -605,12 +605,15 @@ plt.close(fig10)
 
 #Add Sunspot number in North and South to DTW plots
 #2018/01/19 J. Prchlik
+#Switch to Belgium Sunspot number 2018/02/05  J. Prchlik
 
 #Calculate DTW
-dist_ar, cost_ar, path_ar = mlpy.dtw_std(bn_ar.ar_numspots_sum.dropna().abs().values,bs_ar.ar_numspots_sum.dropna().abs().values,dist_only=False)
+ax3[3].errorbar(ss_nm.index,ss_nm.n_ss.values,yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax3[3].errorbar(ss_nm.index,ss_nm.s_ss.values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+dist_ar, cost_ar, path_ar = mlpy.dtw_std(ss_nm.n_ss.dropna().abs().values,ss_nm.s_ss.dropna().abs().values,dist_only=False)
 #Southern times
-s_ar_time = mdates.date2num(bs_ar.ar_numspots_sum.dropna().index.to_pydatetime())
-n_ar_time = mdates.date2num(bn_ar.ar_numspots_sum.dropna().index.to_pydatetime())
+s_ar_time = mdates.date2num(ss_nm.s_ss.dropna().index.to_pydatetime())
+n_ar_time = mdates.date2num(ss_nm.n_ss.dropna().index.to_pydatetime())
 
 #get differneces in ar time
 ds_ar_t = np.diff(s_ar_time)
