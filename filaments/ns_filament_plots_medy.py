@@ -14,8 +14,12 @@ from datetime import datetime,timedelta
 import scipy.stats as stats
 import statsmodels.api as sm
 
+import astropy.units as u
+from astropy.coordinates import SkyCoord
+import sunpy.coordinates
+
 #create element for cumlative distribution
-def setup_dis(x,col='med_y'):
+def setup_dis(x,col='med_l'):
     x.set_index(x['track_id'],inplace='true')
     x.sort_values(by=col,inplace=True)
     x[len(x)] = x.iloc[-1]
@@ -23,7 +27,7 @@ def setup_dis(x,col='med_y'):
     return x
 
 #resample pandas data frame with fixed time frame
-def real_resamp(x,dates,col='med_y'):
+def real_resamp(x,dates,col='med_l'):
 
     y = pd.DataFrame(index=dates)
     y[col+'_mean'] = np.nan
@@ -64,6 +68,11 @@ rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_ti
 
 #read in filament categories file
 fil = pd.read_pickle('filament_catagories.pic')
+
+#create hgs mean latitude column 2018/02/05 J. Prchlik
+fil['med_l'] = [SkyCoord(0*u.arcsec, fil.med_l.values[i]*u.arcsec,
+                obstime=fil.event_starttime.values[i],
+                frame='helioprojective').transform_to('heliographic_carrington').lon.value for i in range(len(fil))]
 
 
 #add summed length column
@@ -108,7 +117,7 @@ stab_keys = ['fil1','fil2','fil12','fil123','fil3','fil4','allf','alll']
 for i in stab_keys: 
     d = fil_dict[i]
     d[0]['north'] = 0
-    d[0]['north'][d[0].med_y > 0.] = 1
+    d[0]['north'][d[0].med_l > 0.] = 1
 
 
 
@@ -131,18 +140,18 @@ for j,i in enumerate(fil_keys):
 
 
     #two sample anderson-darling test between n and s of same catagory 
-    ad = stats.anderson_ksamp([n.med_y.values,-s.med_y.values])
-    k2 = stats.ks_2samp(-s.med_y.values,n.med_y.values)
+    ad = stats.anderson_ksamp([n.med_l.values,-s.med_l.values])
+    k2 = stats.ks_2samp(-s.med_l.values,n.med_l.values)
     
    
-    ax[0].plot(n.med_y,n.dis,color=d[1],linestyle=d[3],label=d[4])
-    ax[1].plot(-s.med_y,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
+    ax[0].plot(n.med_l,n.dis,color=d[1],linestyle=d[3],label=d[4])
+    ax[1].plot(-s.med_l,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
 
 
 
 
-    ax2[j].plot(np.abs(n.med_y),n.dis,color='red',label='Nothern')
-    ax2[j].plot(np.abs(s.med_y),1.-s.dis,color='black',linestyle='--',label='Southern')
+    ax2[j].plot(np.abs(n.med_l),n.dis,color='red',label='Nothern')
+    ax2[j].plot(np.abs(s.med_l),1.-s.dis,color='black',linestyle='--',label='Southern')
     if ad[-1] < 1.0: ax2[j].text(100,.1,'p(A-D) = {0:5.4f}'.format(ad[-1]),fontsize=18)
     ax2[j].text(100,.15,'p(KS2) = {0:5.4f}'.format(k2[-1]),fontsize=18)
     ax2[j].set_title(d[4])
@@ -174,10 +183,10 @@ for j,i in enumerate(fil_keys):
 
 
         #plot Med lat. distrbutions 
-        ax5[0].plot(n.med_y,n.dis,color=d[1],linestyle=d[3],label=d[4])
-        ax5[1].plot(-s.med_y,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
-        ax5[0].plot(n123.med_y,n123.dis,color=e[1],linestyle=e[3],label=e[4])
-        ax5[1].plot(-s123.med_y,1.-s123.dis,color=e[1],linestyle=e[3],label=e[4])
+        ax5[0].plot(n.med_l,n.dis,color=d[1],linestyle=d[3],label=d[4])
+        ax5[1].plot(-s.med_l,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
+        ax5[0].plot(n123.med_l,n123.dis,color=e[1],linestyle=e[3],label=e[4])
+        ax5[1].plot(-s123.med_l,1.-s123.dis,color=e[1],linestyle=e[3],label=e[4])
 
 
         #setup d3 and d4 distributions for comparision
@@ -196,16 +205,16 @@ for j,i in enumerate(fil_keys):
         d4s = setup_dis(d4[d4['north'] == 0])
 
         #two sample anderson-darling test between n or s of differnt catagories
-        ad3n = stats.anderson_ksamp([d3n.med_y.values,n.med_y.values])
-        k23n = stats.ks_2samp(d3n.med_y.values,n.med_y.values)
-        ad3s = stats.anderson_ksamp([d3s.med_y.values,s.med_y.values])
-        k23s = stats.ks_2samp(d3s.med_y.values,s.med_y.values)
+        ad3n = stats.anderson_ksamp([d3n.med_l.values,n.med_l.values])
+        k23n = stats.ks_2samp(d3n.med_l.values,n.med_l.values)
+        ad3s = stats.anderson_ksamp([d3s.med_l.values,s.med_l.values])
+        k23s = stats.ks_2samp(d3s.med_l.values,s.med_l.values)
 
         #two sample anderson-darling test between n or s of 1, 2, and 3 vs 4
-        ad4n = stats.anderson_ksamp([d4n.med_y.values,n123.med_y.values])
-        k24n = stats.ks_2samp(d4n.med_y.values,n123.med_y.values)
-        ad4s = stats.anderson_ksamp([d4s.med_y.values,s123.med_y.values])
-        k24s = stats.ks_2samp(d4s.med_y.values,s123.med_y.values)
+        ad4n = stats.anderson_ksamp([d4n.med_l.values,n123.med_l.values])
+        k24n = stats.ks_2samp(d4n.med_l.values,n123.med_l.values)
+        ad4s = stats.anderson_ksamp([d4s.med_l.values,s123.med_l.values])
+        k24s = stats.ks_2samp(d4s.med_l.values,s123.med_l.values)
 
         #show fit stat on plot
         if ad3n[-1] < 1.0: ax5[0].text(550,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3n[-1]),fontsize=14)
@@ -221,8 +230,8 @@ for j,i in enumerate(fil_keys):
 
 
     elif ((i == 'fil3') | (i == 'fil4')):
-        ax5[0].plot(n.med_y,n.dis,color=d[1],linestyle=d[3],label=d[4])
-        ax5[1].plot(-s.med_y,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
+        ax5[0].plot(n.med_l,n.dis,color=d[1],linestyle=d[3],label=d[4])
+        ax5[1].plot(-s.med_l,1.-s.dis,color=d[1],linestyle=d[3],label=d[4])
 
 
 
@@ -255,16 +264,16 @@ for j,i in enumerate(tilt_time):
     bs = allf[allf.north == 0]
 
     #resample with fixed cadence
-    mbn = real_resamp(bn,rng,col='med_y')
-    mbs = real_resamp(bs,rng,col='med_y')
+    mbn = real_resamp(bn,rng,col='med_l')
+    mbs = real_resamp(bs,rng,col='med_l')
     
     #plot running mean
-    ax3[j].errorbar(mbn.index,mbn.med_y_mean,xerr=timedelta(days=14),yerr=mbn.med_y_std.values/np.sqrt(mbn.med_y_cnt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean ({0})'.format(sam))
-    ax3[j].errorbar(mbs.index,-mbs.med_y_mean,xerr=timedelta(days=14),yerr=mbs.med_y_std.values/np.sqrt(mbs.med_y_cnt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
+    ax3[j].errorbar(mbn.index,mbn.med_l_mean,xerr=timedelta(days=14),yerr=mbn.med_l_std.values/np.sqrt(mbn.med_l_cnt.values),capsize=3,barsabove=True,fmt='-',color='red',linewidth=3,label='Northern Mean ({0})'.format(sam))
+    ax3[j].errorbar(mbs.index,-mbs.med_l_mean,xerr=timedelta(days=14),yerr=mbs.med_l_std.values/np.sqrt(mbs.med_l_cnt.values),capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
     
     #Make y versus time plot
-    ax3[j].scatter(bn.index,bn.med_y,color='red',marker='o',label='Northern')
-    ax3[j].scatter(bs.index,-bs.med_y,color='black',marker='D',label='Southern')
+    ax3[j].scatter(bn.index,bn.med_l,color='red',marker='o',label='Northern')
+    ax3[j].scatter(bs.index,-bs.med_l,color='black',marker='D',label='Southern')
     #Y title
     ax3[j].set_ylabel("$|$Med. Lat.$|$ ['']\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2').replace('allf','All')))
     fancy_plot(ax3[j])
@@ -335,8 +344,8 @@ ax3[0].legend(loc='lower left',frameon=False,handletextpad=.112,scatterpoints=1,
 ax5[0].legend(loc='upper left',frameon=False,fontsize=18)
 ax6[0].legend(loc='upper left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=18,handlelength=1)
 
-fig.savefig( 'plots/ns_cumla_dis_medy.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
-fig2.savefig('plots/ns_cat_cumla_dis_medy.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
-fig3.savefig('plots/medy_v_time.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
-fig5.savefig('plots/ns_cumla_dis_medy_comb12.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig.savefig( 'plots/ns_cumla_dis_medl.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig2.savefig('plots/ns_cat_cumla_dis_medl.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig3.savefig('plots/medl_v_time.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig5.savefig('plots/ns_cumla_dis_medl_comb12.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig6.savefig('plots/med_len_v_time.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
