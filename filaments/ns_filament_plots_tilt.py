@@ -6,6 +6,7 @@ mpl.rcParams['text.usetex'] = True
 mpl.rcParams['font.sans-serif'] = 'Helvetica'
 mpl.rcParams['font.size'] = 18
 
+import matplotlib.dates as mdates
 
 
 import matplotlib.pyplot as plt
@@ -353,7 +354,6 @@ for j,i in enumerate(tilt_time):
 
     #Do dynamic time warping and plot the result
     if ((i == 'fil4') & (time_warp)): 
-        import matplotlib.dates as mdates
 
         fig100,ax100 = plt.subplots()
 
@@ -428,8 +428,8 @@ for j,i in enumerate(tilt_time):
         rax.scatter(bs.index,bs.med_tilt,color='black',marker='D',label='Southern')
 
         #Add different and similar lines 2018/03/30 J. Prchlik
-        rax.axvline(mdate.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
-        rax.axvline(mdate.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
+        rax.axvline(mdates.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
+        rax.axvline(mdates.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
 
 
         #Y title
@@ -476,8 +476,8 @@ ax3[plot_rows-1].plot(ss_nm.index,ss_nm.n_ss.values,'-',color='red',label='North
 ax3[plot_rows-1].plot(ss_nm.index,ss_nm.s_ss.values,'--',color='black',label='Southern ({0})'.format(sam))
 
 #Add different and similar lines 2018/03/30 J. Prchlik
-ax3[plot_rows-1].axvline(mdate.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
-ax3[plot_rows-1].axvline(mdate.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
+ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
+ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
 
 
 
@@ -656,27 +656,29 @@ plt.close(fig10)
 #Cut DTW range down 2018/02/05
 
 #Calculate DTW
-dist_ar, cost_ar, path_ar = mlpy.dtw_std(ss_nm['2011/06/01':'2015/06/01'].n_ss.abs().values,ss_nm['2011/06/01':'2015/06/01'].s_ss.abs().values,dist_only=False)
-#Southern times
-n_ar_time = mdates.date2num(ss_nm['2011/06/01':'2015/06/01'].iloc[path_ar[0],:].index.to_pydatetime())
-s_ar_time = mdates.date2num(ss_nm['2011/06/01':'2015/06/01'].iloc[path_ar[1],:].index.to_pydatetime())
+#Removed required DTW 2018/03/30
+if time_warp:
+    dist_ar, cost_ar, path_ar = mlpy.dtw_std(ss_nm['2011/06/01':'2015/06/01'].n_ss.abs().values,ss_nm['2011/06/01':'2015/06/01'].s_ss.abs().values,dist_only=False)
+    #Southern times
+    n_ar_time = mdates.date2num(ss_nm['2011/06/01':'2015/06/01'].iloc[path_ar[0],:].index.to_pydatetime())
+    s_ar_time = mdates.date2num(ss_nm['2011/06/01':'2015/06/01'].iloc[path_ar[1],:].index.to_pydatetime())
 
 
-plot7 = ax100.plot(s_ar_time, n_ar_time,'black',linewidth=3)
+    plot7 = ax100.plot(s_ar_time, n_ar_time,'black',linewidth=3)
 
-#ax100.set_xlim([s_ar_time[0],s_ar_time[-1]])
-#ax100.set_ylim([n_ar_time[0],n_ar_time[-1]])
-#manually show plotted range
-time_range = [datetime(2011,6,1),datetime(2015,6,1)]
-ax100.set_xlim(time_range)
-ax100.set_ylim(time_range)
-
-
-ax100.grid(True,color='gray',linestyle='--')
-
-fig100.savefig('plots/time_warp_fil4_tilt.png',bbox_pad=.1,bbox_inches='tight')
-fig100.savefig('plots/time_warp_fil4_tilt.eps',bbox_pad=.1,bbox_inches='tight')
-plt.close(fig100)
+    #ax100.set_xlim([s_ar_time[0],s_ar_time[-1]])
+    #ax100.set_ylim([n_ar_time[0],n_ar_time[-1]])
+    #manually show plotted range
+    time_range = [datetime(2011,6,1),datetime(2015,6,1)]
+    ax100.set_xlim(time_range)
+    ax100.set_ylim(time_range)
+    
+    
+    ax100.grid(True,color='gray',linestyle='--')
+    
+    fig100.savefig('plots/time_warp_fil4_tilt.png',bbox_pad=.1,bbox_inches='tight')
+    fig100.savefig('plots/time_warp_fil4_tilt.eps',bbox_pad=.1,bbox_inches='tight')
+    plt.close(fig100)
 
 
 #Also check sunspot height using AR indentifier
