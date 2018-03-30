@@ -20,7 +20,7 @@ import astropy.units as u
 
 from sunpy.sun import solar_semidiameter_angular_size
 import astropy.units as u
-import pyfits
+from astropy.io import fits as  pyfits
 import datetime
 
 
