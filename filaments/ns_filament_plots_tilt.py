@@ -4,7 +4,7 @@ mpl.rcParams['lines.linewidth'] = 3
 mpl.rcParams['font.weight'] = 'bold'
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['font.sans-serif'] = 'Helvetica'
-mpl.rcParams['font.size'] = 24
+mpl.rcParams['font.size'] = 18
 
 
 
@@ -75,11 +75,22 @@ def real_resamp(x,dates,col='med_tilt'):
 
 
 
+#set up time slices
+#times when tilts are different
+s_d1 = '2012/01/01'
+e_d1 = '2012/07/15'
+s_d2 = '2013/10/21'
+e_d2 = '2015/01/01'
+
+#time when tilts are similiar 
+s_s1 = '2012/07/16'
+e_s1 = '2013/10/20'
 
 #sampling frequency 
 sam = '4W'
 #get pandas timeseries representation for filament tracking code time range
-rng = pd.date_range('2010-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
+#Updated to shorter range for plotting 2018/03/30 J. Prchlik
+rng = pd.date_range('2011-06-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
 #rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
 
 #read in filament categories given in Brianna's code
@@ -88,7 +99,7 @@ rng = pd.date_range('2010-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_ti
 fil = pd.read_pickle('filament_categories_hgs_mean_l.pic')
 
 #test dynamic time warping
-time_warp = True
+time_warp = False
 if time_warp: import mlpy
 
 fil_dict = {}
@@ -134,8 +145,11 @@ for i in stab_keys:
     d[0]['north'][d[0].med_l > 0.] = 1
 
 
+#Keys to plot cumlative distribution for 2018/30/30 J. prchlik
+cuml_keys = ['fil123','fil4']
 
-for j,i in enumerate(fil_keys):
+#Keys to plot cumlative distribution for 2018/30/30 J. prchlik
+for j,i in enumerate(cuml_keys):
     d = fil_dict[i]
 
     d[0].set_index(d[0]['track_id'],inplace=True)
@@ -208,8 +222,9 @@ for j,i in enumerate(fil_keys):
 
 
         #plot Med tilt distrbutions 
-        ax5[0].plot(n.med_tilt,n.dis,color=d[1],linestyle=d[3],label=d[4])
-        ax5[1].plot(s.med_tilt,s.dis,color=d[1],linestyle=d[3],label=d[4])
+        #Only plot 1,2,3 combined filaments
+        #ax5[0].plot(n.med_tilt,n.dis,color=d[1],linestyle=d[3],label=d[4])
+        #ax5[1].plot(s.med_tilt,s.dis,color=d[1],linestyle=d[3],label=d[4])
         ax5[0].plot(n123.med_tilt,n123.dis,color=e[1],linestyle=e[3],label=e[4])
         ax5[1].plot(s123.med_tilt,s123.dis,color=e[1],linestyle=e[3],label=e[4])
 
@@ -281,22 +296,24 @@ tilt_time = ['fil123','fil4']
 plot_rows = len(tilt_time)+1
 #There for only need 3 rows instead of 4
 #plotting 1and 2, 3, and 4 versus time and sunspots
-fig3, ax3 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
+#update fig size for 3 plots
+fig_size = (11.,11.3)
+fig3, ax3 = plt.subplots(figsize=fig_size,nrows=plot_rows,sharex=True)
 fig3.subplots_adjust(hspace=0.001,wspace=0.001)
 #plotting 1and 2, 3, and 4 versus time and emerging flux
-fig8, ax8 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
+fig8, ax8 = plt.subplots(figsize=fig_size,nrows=plot_rows,sharex=True)
 fig8.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #plots for 1 and 2, 3, 5 versus time and ar PIL curvature
-fig10, ax10 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
+fig10, ax10 = plt.subplots(figsize=fig_size,nrows=plot_rows,sharex=True)
 fig10.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #plots for 1 and 2, 3, 5 versus time and Sigmoid properties curvature
-fig11, ax11 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
+fig11, ax11 = plt.subplots(figsize=fig_size,nrows=plot_rows,sharex=True)
 fig11.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #plots for 1 and 2, 3, 5 versus time and ar height
-fig12, ax12 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
+fig12, ax12 = plt.subplots(figsize=fig_size,nrows=plot_rows,sharex=True)
 fig12.subplots_adjust(hspace=0.001,wspace=0.001)
 
 
@@ -410,9 +427,14 @@ for j,i in enumerate(tilt_time):
         rax.scatter(bn.index,bn.med_tilt,color='red',marker='o',label='Northern')
         rax.scatter(bs.index,bs.med_tilt,color='black',marker='D',label='Southern')
 
+        #Add different and similar lines 2018/03/30 J. Prchlik
+        rax.axvline(mdate.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
+        rax.axvline(mdate.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
+
+
         #Y title
         #Update width 1, 2, and 3 (i.e. Have a cavity compbined)
-        rax.set_ylabel("Med. Tilt [Deg.]\r {0}".format(i.replace('fil','Category ').replace('123','1, 2, and 3')))
+        rax.set_ylabel("Med. Tilt [Deg.]\n {0}".format(i.replace('fil','Category ').replace('123','1, 2, and 3')))
         fancy_plot(rax)
         rax.set_ylim([-90.,90.])
 
@@ -452,6 +474,12 @@ ax3[plot_rows-1].errorbar(ss_nm.index,ss_nm.n_ss.values,yerr=tot_err_n,xerr=time
 ax3[plot_rows-1].errorbar(ss_nm.index,ss_nm.s_ss.values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
 ax3[plot_rows-1].plot(ss_nm.index,ss_nm.n_ss.values,'-',color='red',label='Northern ({0})'.format(sam))
 ax3[plot_rows-1].plot(ss_nm.index,ss_nm.s_ss.values,'--',color='black',label='Southern ({0})'.format(sam))
+
+#Add different and similar lines 2018/03/30 J. Prchlik
+ax3[plot_rows-1].axvline(mdate.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
+ax3[plot_rows-1].axvline(mdate.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
+
+
 
 
 #Northern Matching
@@ -774,16 +802,6 @@ cat4 = cat4[~cat4.index.duplicated(keep='first')]
 cat4.set_index(cat4['event_starttime_dt'],inplace=True)
 cat4.sort_index(inplace=True)
 
-#set up time slices
-#times when tilts are different
-s_d1 = '2012/01/01'
-e_d1 = '2012/07/15'
-s_d2 = '2013/10/21'
-e_d2 = '2015/01/01'
-
-#time when tilts are similiar 
-s_s1 = '2012/07/16'
-e_s1 = '2013/10/20'
 
 
 #separate into north and south
