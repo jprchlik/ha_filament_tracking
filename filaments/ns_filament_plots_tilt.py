@@ -79,12 +79,12 @@ def real_resamp(x,dates,col='med_tilt'):
 #set up time slices
 #times when tilts are different
 s_d1 = '2012/01/01'
-e_d1 = '2012/07/15'
+e_d1 = '2012/07/31'
 s_d2 = '2013/10/21'
 e_d2 = '2015/01/01'
 
 #time when tilts are similiar 
-s_s1 = '2012/07/16'
+s_s1 = '2012/08/01'
 e_s1 = '2013/10/20'
 
 #sampling frequency 
@@ -640,6 +640,10 @@ ax10[plot_rows-1].errorbar(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),yerr=t
 ax10[plot_rows-1].plot(bn_ar.index,np.abs(bn_ar[check+'_sum'].values),'-',color='red',label='Northern ({0})'.format(sam))
 ax10[plot_rows-1].plot(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),'--',color='black',label='Southern ({0})'.format(sam))
 
+#Add different and similar lines 2018/03/30 J. Prchlik
+ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
+ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
+
 fancy_plot(ax10[plot_rows-1])
 
 ax10[plot_rows-1].set_ylabel('Ave. Sunspots [\#]')
@@ -699,6 +703,10 @@ ax12[plot_rows-1].plot(bn_ar.index,np.abs(bn_ar[check+'_mean'].values),'-',color
 ax12[plot_rows-1].plot(bs_ar.index,np.abs(bs_ar[check+'_mean'].values),'--',color='black',label='Southern ({0})'.format(sam))
 ax12[plot_rows-1].scatter(n_ar.index,np.abs(n_ar[check].values),marker='o',color='red',label=None)
 ax12[plot_rows-1].scatter(s_ar.index,np.abs(s_ar[check].values),marker='D',color='black',label=None)
+
+#Add different and similar lines 2018/03/30 J. Prchlik
+ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
+ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
 
 fancy_plot(ax12[plot_rows-1])
 
