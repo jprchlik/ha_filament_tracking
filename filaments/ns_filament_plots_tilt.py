@@ -83,7 +83,9 @@ rng = pd.date_range('2010-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_ti
 #rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
 
 #read in filament categories given in Brianna's code
-fil = pd.read_pickle('filament_catagories.pic')
+#fil = pd.read_pickle('filament_catagories.pic')
+#update with hgs coordinates 2018/02/05 J. Prchlik
+fil = pd.read_pickle('filament_categories_hgs_mean_l.pic')
 
 #test dynamic time warping
 time_warp = True
@@ -129,7 +131,7 @@ stab_keys = ['fil1','fil2','fil12','fil123','fil3','fil4','allf']
 for i in stab_keys: 
     d = fil_dict[i]
     d[0]['north'] = 0
-    d[0]['north'][d[0].med_y > 0.] = 1
+    d[0]['north'][d[0].med_l > 0.] = 1
 
 
 
@@ -149,8 +151,9 @@ for j,i in enumerate(fil_keys):
     s = setup_dis(s)
   
     #overplot statiscal distributions 
-    ax2[j].plot(rand_tilt,cuml_tilt,'-',color='teal',label='Random')
-    ax2[j].plot(norm_tilt,cuml_tilt,'-',color='blue',label='Gaussian')
+    #Remove Random and Gaussian overplots
+    #ax2[j].plot(rand_tilt,cuml_tilt,'-',color='teal',label='Random')
+    #ax2[j].plot(norm_tilt,cuml_tilt,'-',color='blue',label='Gaussian')
 
     #Not sure why I did this but it messes up the distributions
     #n.set_index(n['event_starttime_dt'],inplace=True)
@@ -168,10 +171,10 @@ for j,i in enumerate(fil_keys):
     ax[1].plot(s.med_tilt,s.dis,color=d[1],linestyle=d[3],label=d[4])
 
 
-    ax4[0].scatter(n.med_tilt,n.med_y,color=d[1],marker=d[2],label=d[4])
-    ax4[1].scatter(s.med_tilt,s.med_y,color=d[1],marker=d[2],label=d[4])
+    ax4[0].scatter(n.med_tilt,n.med_l,color=d[1],marker=d[2],label=d[4])
+    ax4[1].scatter(s.med_tilt,s.med_l,color=d[1],marker=d[2],label=d[4])
 
-    ax1.scatter(d[0].med_y,d[0].med_tilt,color=d[1],marker=d[2],label=d[4])
+    ax1.scatter(d[0].med_l,d[0].med_tilt,color=d[1],marker=d[2],label=d[4])
 
     ax2[j].plot(n.med_tilt,n.dis,color='red',label='Nothern')
     ax2[j].plot(s.med_tilt,s.dis,color='black',linestyle='--',label='Southern')
@@ -266,32 +269,36 @@ allf.set_index(allf['event_starttime_dt'],inplace=True)
 allf.sort_index(inplace=True)
    
 
-npp = stats.pearsonr(allf[allf.north == 1].med_tilt.values,allf[allf.north == 1].med_y.values)
-spp = stats.pearsonr(allf[allf.north == 0].med_tilt.values,allf[allf.north == 0].med_y.values)
-ax4[0].text(-90,200,'r={0:4.3f},p={0:4.3f}'.format(*npp),fontsize=12)
-ax4[1].text(-90,-200,'r={0:4.3f},p={0:4.3f}'.format(*spp),fontsize=12)
+npp = stats.pearsonr(allf[allf.north == 1].med_tilt.values,allf[allf.north == 1].med_l.values)
+spp = stats.pearsonr(allf[allf.north == 0].med_tilt.values,allf[allf.north == 0].med_l.values)
+ax4[0].text(-90,20,'r={0:4.3f},p={0:4.3f}'.format(*npp),fontsize=12)
+ax4[1].text(-90,-20,'r={0:4.3f},p={0:4.3f}'.format(*spp),fontsize=12)
 
+#Cut down dow filaments 1,2,3 versus 4 2018/03/30 J. Prchlik
+#array of filament objects
+#Cut down dow filaments 1,2,3 versus 4 2018/03/30 J. Prchlik
+tilt_time = ['fil123','fil4']
+plot_rows = len(tilt_time)+1
+#There for only need 3 rows instead of 4
 #plotting 1and 2, 3, and 4 versus time and sunspots
-fig3, ax3 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig3, ax3 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
 fig3.subplots_adjust(hspace=0.001,wspace=0.001)
 #plotting 1and 2, 3, and 4 versus time and emerging flux
-fig8, ax8 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig8, ax8 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
 fig8.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #plots for 1 and 2, 3, 5 versus time and ar PIL curvature
-fig10, ax10 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig10, ax10 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
 fig10.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #plots for 1 and 2, 3, 5 versus time and Sigmoid properties curvature
-fig11, ax11 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig11, ax11 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
 fig11.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #plots for 1 and 2, 3, 5 versus time and ar height
-fig12, ax12 = plt.subplots(figsize=(33.,34.0),nrows=4,sharex=True)
+fig12, ax12 = plt.subplots(figsize=(33.,34.0),nrows=plot_rows,sharex=True)
 fig12.subplots_adjust(hspace=0.001,wspace=0.001)
 
-#array of filament objects
-tilt_time = ['fil12','fil3','fil4']
 
 for j,i in enumerate(tilt_time):
 
@@ -404,7 +411,8 @@ for j,i in enumerate(tilt_time):
         rax.scatter(bs.index,bs.med_tilt,color='black',marker='D',label='Southern')
 
         #Y title
-        rax.set_ylabel("Med. Tilt [Deg.]\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2')))
+        #Update width 1, 2, and 3 (i.e. Have a cavity compbined)
+        rax.set_ylabel("Med. Tilt [Deg.]\r {0}".format(i.replace('fil','Category ').replace('123','1, 2, and 3')))
         fancy_plot(rax)
         rax.set_ylim([-90.,90.])
 
@@ -439,10 +447,11 @@ tot_err_n = ss_nm.n_ss_unc
                      
                      
 #plot average height of sunspots
-ax3[3].errorbar(ss_nm.index,ss_nm.n_ss.values,yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
-ax3[3].errorbar(ss_nm.index,ss_nm.s_ss.values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
-ax3[3].plot(ss_nm.index,ss_nm.n_ss.values,'-',color='red',label='Northern ({0})'.format(sam))
-ax3[3].plot(ss_nm.index,ss_nm.s_ss.values,'--',color='black',label='Southern ({0})'.format(sam))
+#updated with new plot_rows parameter 2018/03/30 J. Prchlik
+ax3[plot_rows-1].errorbar(ss_nm.index,ss_nm.n_ss.values,yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax3[plot_rows-1].errorbar(ss_nm.index,ss_nm.s_ss.values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax3[plot_rows-1].plot(ss_nm.index,ss_nm.n_ss.values,'-',color='red',label='Northern ({0})'.format(sam))
+ax3[plot_rows-1].plot(ss_nm.index,ss_nm.s_ss.values,'--',color='black',label='Southern ({0})'.format(sam))
 
 
 #Northern Matching
@@ -529,18 +538,21 @@ bs_ef = real_resamp(s_ef,rng,col=check)
 tot_err_s = np.sqrt((bs_ef[check+'_std'].values/np.sqrt(bs_ef[check+'_cnt'].values))**2.)
 tot_err_n = np.sqrt((bn_ef[check+'_std'].values/np.sqrt(bn_ef[check+'_cnt'].values))**2.)
 
+
 #plot average height of emerging flux
-ax8[3].errorbar(bn_ef.index,np.abs(bn_ef[check+'_mean'].values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
-ax8[3].errorbar(bs_ef.index,np.abs(bs_ef[check+'_mean'].values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
-ax8[3].plot(bn_ef.index,np.abs(bn_ef[check+'_mean'].values),'-',color='red',label='Northern ({0})'.format(sam))
-ax8[3].plot(bs_ef.index,np.abs(bs_ef[check+'_mean'].values),'--',color='black',label='Southern ({0})'.format(sam))
+#update with new plot rows parameter 2018/03/30 J. Prchlik
+ax8[plot_rows-1].errorbar(bn_ef.index,np.abs(bn_ef[check+'_mean'].values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax8[plot_rows-1].errorbar(bs_ef.index,np.abs(bs_ef[check+'_mean'].values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax8[plot_rows-1].plot(bn_ef.index,np.abs(bn_ef[check+'_mean'].values),'-',color='red',label='Northern ({0})'.format(sam))
+ax8[plot_rows-1].plot(bs_ef.index,np.abs(bs_ef[check+'_mean'].values),'--',color='black',label='Southern ({0})'.format(sam))
 
-fancy_plot(ax8[3])
+fancy_plot(ax8[plot_rows-1])
 
-ax8[3].set_ylabel('Proximity Ratio')
-ax8[3].set_xlabel('Time [UTC]')
+ax8[plot_rows-1].set_ylabel('Proximity Ratio')
+ax8[plot_rows-1].set_xlabel('Time [UTC]')
 
 fig8.savefig('plots/emerging_flux_time.png',bbox_pad=.1,bbox_inches='tight')
+fig8.savefig('plots/emerging_flux_time.eps',bbox_pad=.1,bbox_inches='tight')
 plt.close(fig8)
 
 ###########################################
@@ -595,17 +607,18 @@ tot_err_s = np.sqrt((bs_ar[check+'_std'].values/np.sqrt(bs_ar[check+'_cnt'].valu
 tot_err_n = np.sqrt((bn_ar[check+'_std'].values/np.sqrt(bn_ar[check+'_cnt'].values))**2.)
 
 #plot average height of emerging flux
-ax10[3].errorbar(bn_ar.index,np.abs(bn_ar[check+'_sum'].values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
-ax10[3].errorbar(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
-ax10[3].plot(bn_ar.index,np.abs(bn_ar[check+'_sum'].values),'-',color='red',label='Northern ({0})'.format(sam))
-ax10[3].plot(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),'--',color='black',label='Southern ({0})'.format(sam))
+ax10[plot_rows-1].errorbar(bn_ar.index,np.abs(bn_ar[check+'_sum'].values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax10[plot_rows-1].errorbar(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax10[plot_rows-1].plot(bn_ar.index,np.abs(bn_ar[check+'_sum'].values),'-',color='red',label='Northern ({0})'.format(sam))
+ax10[plot_rows-1].plot(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),'--',color='black',label='Southern ({0})'.format(sam))
 
-fancy_plot(ax10[3])
+fancy_plot(ax10[plot_rows-1])
 
-ax10[3].set_ylabel('Ave. Sun Spots [\#]')
-ax10[3].set_xlabel('Time [UTC]')
+ax10[plot_rows-1].set_ylabel('Ave. Sunspots [\#]')
+ax10[plot_rows-1].set_xlabel('Time [UTC]')
 
 fig10.savefig('plots/ar_sunspots_time.png',bbox_pad=.1,bbox_inches='tight')
+fig10.savefig('plots/ar_sunspots_time.eps',bbox_pad=.1,bbox_inches='tight')
 plt.close(fig10) 
 
 #Add Sunspot number in North and South to DTW plots
@@ -617,8 +630,8 @@ plt.close(fig10)
 #Calculate DTW
 dist_ar, cost_ar, path_ar = mlpy.dtw_std(ss_nm['2011/06/01':'2015/06/01'].n_ss.abs().values,ss_nm['2011/06/01':'2015/06/01'].s_ss.abs().values,dist_only=False)
 #Southern times
-s_ar_time = mdates.date2num(ss_nm['2011/06/01':'2015/06/01'].iloc[path_ar[1],:].index.to_pydatetime())
 n_ar_time = mdates.date2num(ss_nm['2011/06/01':'2015/06/01'].iloc[path_ar[0],:].index.to_pydatetime())
+s_ar_time = mdates.date2num(ss_nm['2011/06/01':'2015/06/01'].iloc[path_ar[1],:].index.to_pydatetime())
 
 
 plot7 = ax100.plot(s_ar_time, n_ar_time,'black',linewidth=3)
@@ -634,6 +647,7 @@ ax100.set_ylim(time_range)
 ax100.grid(True,color='gray',linestyle='--')
 
 fig100.savefig('plots/time_warp_fil4_tilt.png',bbox_pad=.1,bbox_inches='tight')
+fig100.savefig('plots/time_warp_fil4_tilt.eps',bbox_pad=.1,bbox_inches='tight')
 plt.close(fig100)
 
 
@@ -649,19 +663,20 @@ tot_err_s = np.sqrt((bs_ar[check+'_std'].values/np.sqrt(bs_ar[check+'_cnt'].valu
 tot_err_n = np.sqrt((bn_ar[check+'_std'].values/np.sqrt(bn_ar[check+'_cnt'].values))**2.)
 
 #plot average height of emerging flux
-ax12[3].errorbar(bn_ar.index,np.abs(bn_ar[check+'_mean'].values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
-ax12[3].errorbar(bs_ar.index,np.abs(bs_ar[check+'_mean'].values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
-ax12[3].plot(bn_ar.index,np.abs(bn_ar[check+'_mean'].values),'-',color='red',label='Northern ({0})'.format(sam))
-ax12[3].plot(bs_ar.index,np.abs(bs_ar[check+'_mean'].values),'--',color='black',label='Southern ({0})'.format(sam))
-ax12[3].scatter(n_ar.index,np.abs(n_ar[check].values),marker='o',color='red',label=None)
-ax12[3].scatter(s_ar.index,np.abs(s_ar[check].values),marker='D',color='black',label=None)
+ax12[plot_rows-1].errorbar(bn_ar.index,np.abs(bn_ar[check+'_mean'].values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax12[plot_rows-1].errorbar(bs_ar.index,np.abs(bs_ar[check+'_mean'].values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax12[plot_rows-1].plot(bn_ar.index,np.abs(bn_ar[check+'_mean'].values),'-',color='red',label='Northern ({0})'.format(sam))
+ax12[plot_rows-1].plot(bs_ar.index,np.abs(bs_ar[check+'_mean'].values),'--',color='black',label='Southern ({0})'.format(sam))
+ax12[plot_rows-1].scatter(n_ar.index,np.abs(n_ar[check].values),marker='o',color='red',label=None)
+ax12[plot_rows-1].scatter(s_ar.index,np.abs(s_ar[check].values),marker='D',color='black',label=None)
 
-fancy_plot(ax12[3])
+fancy_plot(ax12[plot_rows-1])
 
-ax12[3].set_ylabel('Ave. AR Lat. [Deg.]')
-ax12[3].set_xlabel('Time [UTC]')
+ax12[plot_rows-1].set_ylabel('Ave. AR Lat. [Deg.]')
+ax12[plot_rows-1].set_xlabel('Time [UTC]')
 
 fig12.savefig('plots/ar_height_time.png',bbox_pad=.1,bbox_inches='tight')
+fig12.savefig('plots/ar_height_time.eps',bbox_pad=.1,bbox_inches='tight')
 plt.close(fig12)
 
 ###########################################
@@ -728,20 +743,21 @@ tot_err_s = np.sqrt((bs_sg[check+'_std'].values/np.sqrt(bs_sg[check+'_cnt'].valu
 tot_err_n = np.sqrt((bn_sg[check+'_std'].values/np.sqrt(bn_sg[check+'_cnt'].values))**2.)
 
 #plot average height of emerging flux
-ax11[3].errorbar(bn_sg.index,bn_sg[check+'_mean'].values,yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
-ax11[3].errorbar(bs_sg.index,bs_sg[check+'_mean'].values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
-ax11[3].plot(bn_sg.index,bn_sg[check+'_mean'].values,'-',color='red',label='Northern ({0})'.format(sam))
-ax11[3].plot(bs_sg.index,bs_sg[check+'_mean'].values,'--',color='black',label='Southern ({0})'.format(sam))
-ax11[3].scatter(n_sg.index,n_sg[check].values,color='red',label=None)
-ax11[3].scatter(s_sg.index,s_sg[check].values,color='black',label=None)
+ax11[plot_rows-1].errorbar(bn_sg.index,bn_sg[check+'_mean'].values,yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax11[plot_rows-1].errorbar(bs_sg.index,bs_sg[check+'_mean'].values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax11[plot_rows-1].plot(bn_sg.index,bn_sg[check+'_mean'].values,'-',color='red',label='Northern ({0})'.format(sam))
+ax11[plot_rows-1].plot(bs_sg.index,bs_sg[check+'_mean'].values,'--',color='black',label='Southern ({0})'.format(sam))
+ax11[plot_rows-1].scatter(n_sg.index,n_sg[check].values,color='red',label=None)
+ax11[plot_rows-1].scatter(s_sg.index,s_sg[check].values,color='black',label=None)
 
-fancy_plot(ax11[3])
+fancy_plot(ax11[plot_rows-1])
 
-ax11[3].set_ylabel('Sigmoid Tilt [Deg.]')
-ax11[3].set_xlabel('Time [UTC]')
+ax11[plot_rows-1].set_ylabel('Sigmoid Tilt [Deg.]')
+ax11[plot_rows-1].set_xlabel('Time [UTC]')
 
 #ax11[3].set_ylim([0.0,2.])
 fig11.savefig('plots/sg_curvature_time.png',bbox_pad=.1,bbox_inches='tight')
+fig11.savefig('plots/sg_curvature_time.eps',bbox_pad=.1,bbox_inches='tight')
 ###########################################
 ###########################################
 
@@ -845,6 +861,7 @@ ax9.set_xlabel('Tilt [Deg.]')
 fancy_plot(ax9)
 
 fig9.savefig('plots/tilt_during_diff_cat4.png',bbox_pad=.1,bbox_inches='tight')
+fig9.savefig('plots/tilt_during_diff_cat4.eps',bbox_pad=.1,bbox_inches='tight')
 
 #Correlation or Anti-correlation in filament tilt for category 4
 # (2017/12/18 J. Prchlik)
@@ -906,6 +923,7 @@ ax_at[1].set_ylim(y_lim)
 
 
 fig_at.savefig('plots/fi_tilt_ns_comp.png',bbox_pad=.1,bbox_inches='tight')
+fig_at.savefig('plots/fi_tilt_ns_comp.eps',bbox_pad=.1,bbox_inches='tight')
 
 plt.close(fig_at)
 
@@ -973,8 +991,8 @@ ps_er = real_resamp(pm_s,rng,col='events')
 
 #Switch filament eruptions to sunspot number 2017/10/13
 #ax3[3].set_ylabel('Number of Eruptions')
-ax3[3].set_ylabel('Ave. Sun Spot Lat. [deg]')
-fancy_plot(ax3[3])
+ax3[plot_rows-1].set_ylabel('Ave. Sunspot [\#]')
+fancy_plot(ax3[plot_rows-1])
 
 
 
@@ -993,7 +1011,7 @@ ax5[1].set_title('Southern')
 
 ax[0].set_xlabel('Med. Tilt [Deg.]')
 ax[1].set_xlabel('Med. Tilt [Deg.]')
-ax1.set_xlabel("Med. Centroid Lat. ['']")
+ax1.set_xlabel("Med. Centroid Lat. [Deg.]")
 ax3[2].set_xlabel("Time")
 ax4[0].set_xlabel('Med. Tilt [Deg.]')
 ax4[1].set_xlabel('Med. Tilt [Deg.]')
@@ -1005,8 +1023,8 @@ ax1.set_ylabel('Med. Tilt [Deg.]')
 ax1.set_ylabel('Tilt [Deg.]')
 ax2[0].set_ylabel('Cumulative Fraction')
 ax2[2].set_ylabel('Cumulative Fraction')
-ax4[0].set_ylabel("Med. Centroid Lat. ['']")
-ax4[1].set_ylabel("Med. Centroid Lat. ['']")
+ax4[0].set_ylabel("Med. Centroid Lat. [Deg.]")
+ax4[1].set_ylabel("Med. Centroid Lat. [Deg.]")
 ax5[0].set_ylabel('Cumulative Fraction')
 
 
@@ -1038,5 +1056,11 @@ fig2.savefig('plots/ns_cat_cumla_dis_tilt.png',bbox_pad=.1,bbox_inches='tight',f
 fig3.savefig('plots/tilt_v_time_w_ss.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig4.savefig('plots/ns_med_tilt_v_med_lat.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 fig5.savefig('plots/ns_cumla_dis_tilt_comb12.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig.savefig( 'plots/ns_cumla_dis_tilt.eps',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig1.savefig('plots/med_tilt_v_med_lat.eps',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig2.savefig('plots/ns_cat_cumla_dis_tilt.eps',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig3.savefig('plots/tilt_v_time_w_ss.eps',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig4.savefig('plots/ns_med_tilt_v_med_lat.eps',bbox_pad=.1,bbox_inches='tight',fontsize=18)
+fig5.savefig('plots/ns_cumla_dis_tilt_comb12.eps',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 #fig6.savefig('plots/ns_tilt_ss_height_fil4.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
 #fig7.savefig('plots/ns_diff_tilt_diff_ss_height_fil4.png',bbox_pad=.1,bbox_inches='tight',fontsize=18)
