@@ -5,6 +5,9 @@ mpl.rcParams['font.weight'] = 'bold'
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['font.sans-serif'] = 'Helvetica'
 mpl.rcParams['font.size'] = 18
+#Set default image dpi
+mpl.rcParams['figure.dpi'] = 600
+mpl.rcParams['savefig.dpi'] = 600
 
 import matplotlib.dates as mdates
 
