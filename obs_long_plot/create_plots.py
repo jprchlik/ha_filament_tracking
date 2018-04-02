@@ -28,7 +28,7 @@ class halpha_plot:
     """ A class which creates an image from an input file.
         Currently used to create H alpha GONG images."""
 
-    def __init__(self,dat,ifile,pdir,lref=False):
+    def __init__(self,dat,ifile,pdir,lref=False,dpi=100,ext='png'):
         """Initializes variables to be used by the halpha_plot class.
 
            This function just creates the object to be class later.
@@ -41,8 +41,12 @@ class halpha_plot:
               ifile is the input GONG H alpha file
            pdir : string
               pdir is a string which points to the directory for plotting
-           lref
-              reference line for good tracks to match with filament (40 degrees)
+           lref: Boolean, optional
+              reference line for good tracks to match with filament (30 degrees, Default = False)
+           dpi:  int, optional
+              Dots Per Inch of output image (Default = 100)
+           ext: string. optional
+              File extension of output image (Default = 'png')
          
            Returns
            -------
@@ -53,6 +57,8 @@ class halpha_plot:
         self.ifile = ifile
         self.pdir = pdir
         self.lref = lref
+        self.dpi  = dpi
+        self.ext  = ext
 
     def draw_lines(self):
         """
@@ -172,7 +178,8 @@ class halpha_plot:
     
     #get start time of track for filename
 #        ofname = '{0}_track{1:6d}'.format(dat['event_starttime'][good[0]],i).replace(' ','0').replace(':','_')
-        self.ofile = self.ifile.split('/')[-1].replace('fits.fz','png')
+        #replaced with named extension 2018/04/02 J. Prchlik
+        self.ofile = self.ifile.split('/')[-1].replace('fits.fz',self.ext)
         try:
             sun = pyfits.open(self.ifile)
         # observed time of GONG halpha image
@@ -182,8 +189,8 @@ class halpha_plot:
     #Solar Halpha data   
             sundat = sun[1].data
     #Set up image properties
-            sc  = 1 
-            dpi = 100*sc
+            sc  = self.dpi/100.
+            dpi = self.dpi
     #get image extent (i.e. physical coordinates)
             x0 = sun[1].header['CRVAL1']-sun[1].header['CRPIX1']
             y0 = sun[1].header['CRVAL2']-sun[1].header['CRPIX2']
