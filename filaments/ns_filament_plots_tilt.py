@@ -113,21 +113,20 @@ fil_dict['fil2'] = [fil[fil.cat_id == 2],'black','x','--',"Cat. 2"]
 fil_dict['fil12'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2))],'red'  ,'o','-' ,"Cat. 1 and 2"]
 fil_dict['fil123'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2) | (fil.cat_id == 3))],'purple','^','-' ,"Cat. 1, 2, and 3"]
 fil_dict['fil3'] = [fil[fil.cat_id == 3],'teal' ,'s','-.',"Cat. 3"]
-fil_dict['fil4'] = [fil[fil.cat_id == 4],'blue' ,'D',':' ,"Cat. 4"]
+fil_dict['fil4'] = [fil[fil.cat_id == 4],'blue' ,'D','--' ,"Cat. 4"]
 fil_dict['allf'] = [fil[fil.cat_id != 0],'blue' ,'D',':' ,"All Filaments"]
 
 
 #setup figures
-fig, ax = plt.subplots(ncols=2,figsize=(11,8.5))
+fig, ax = plt.subplots(nrows=2,figsize=(4.25,12.5))
 fig1, ax1 = plt.subplots(figsize=(11.,8.5))
-fig2, ax2 = plt.subplots(figsize=(13.,17.),ncols=2,nrows=2)
+fig2, ax2 = plt.subplots(figsize=(4.25,12.5),nrows=2) #Switched to two variables only 2018/03/30 J. Prchlik,nrows=2)
 fig4, ax4 = plt.subplots(nrows=2,figsize=(8.5,11),sharex=True)
-fig5, ax5 = plt.subplots(ncols=2,figsize=(11,8.5))
+fig5, ax5 = plt.subplots(nrows=2,figsize=(4.25,12))
 ax2 = ax2.ravel()
-fig.subplots_adjust(hspace=0.001,wspace=0.001)
-fig2.subplots_adjust(wspace=0.001)
+#fig.subplots_adjust(hspace=0.001,wspace=0.001)
 fig4.subplots_adjust(hspace=0.001)
-fig5.subplots_adjust(hspace=0.001,wspace=0.001)
+#fig5.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #set up random distribution for comparison
 samples = 10000
@@ -193,8 +192,9 @@ for j,i in enumerate(cuml_keys):
 
     ax2[j].plot(n.med_tilt,n.dis,color='red',label='Nothern')
     ax2[j].plot(s.med_tilt,s.dis,color='black',linestyle='--',label='Southern')
-    if ad[-1] < 1.0: ax2[j].text(20,.1,'p(A-D) = {0:5.4f}'.format(ad[-1]),fontsize=18)
-    ax2[j].text(20,.15,'p(KS2) = {0:5.4f}'.format(k2[-1]),fontsize=18)
+    #removed A-D stat 2018/03/31 J. Prchlik
+    #if ad[-1] < 1.0: ax2[j].text(20,.1,'p(A-D) = {0:5.4f}'.format(ad[-1]),fontsize=18)
+    ax2[j].text(12,.15,'p(KS2) = {0:4.3f}'.format(k2[-1]),fontsize=12)
     ax2[j].set_title(d[4])
     ax2[j].set_xlabel('Med. Tilt [Deg.]')
     ax2[j].set_xlim([-95,95])
@@ -260,15 +260,16 @@ for j,i in enumerate(cuml_keys):
         k24s = stats.ks_2samp(d4s.med_tilt.values,s123.med_tilt.values)
 
         #show fit stat on plot for 1 and 2 vs. 3
-        if ad[-1] < 1.0: ax5[0].text(5,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3n[-1]),fontsize=14)
-        ax5[0].text(5,.15,'p(KS2;12,3) = {0:5.4f}'.format(k23n[-1]),fontsize=14)
-        if ad[-1] < 1.0: ax5[1].text(5,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3s[-1]),fontsize=14)
-        ax5[1].text(5,.15,'p(KS2;12,3) = {0:5.4f}'.format(k23s[-1]),fontsize=14)
+        #remove A-D stat 2018/03/30 J. Prchlik
+        #if ad[-1] < 1.0: ax5[0].text(5,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3n[-1]),fontsize=14)
+        ax5[0].text(5,.15,'p(KS2;12,3) = {0:4.3f}'.format(k23n[-1]),fontsize=14)
+        #if ad[-1] < 1.0: ax5[1].text(5,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3s[-1]),fontsize=14)
+        ax5[1].text(5,.15,'p(KS2;12,3) = {0:4.3f}'.format(k23s[-1]),fontsize=14)
 
         #show fit stat on plot for 1, 2, and 3 vs 4
-        if ad[-1] < 1.0: ax5[0].text(5,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4n[-1]),fontsize=14)
+        #if ad[-1] < 1.0: ax5[0].text(5,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4n[-1]),fontsize=14)
         ax5[0].text(5,.05,'p(KS2;123,4) = {0:5.4f}'.format(k24n[-1]),fontsize=14)
-        if ad[-1] < 1.0: ax5[1].text(5,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4s[-1]),fontsize=14)
+        #if ad[-1] < 1.0: ax5[1].text(5,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4s[-1]),fontsize=14)
         ax5[1].text(5,.05,'p(KS2;123,4) = {0:5.4f}'.format(k24s[-1]),fontsize=14)
 
 
@@ -841,10 +842,10 @@ s_cat4_d['frac'] = np.arange(0,len(s_cat4_d))/float(len(s_cat4_d))
 s_cat4_s['frac'] = np.arange(0,len(s_cat4_s))/float(len(s_cat4_s))
 
 #finally plot
-ax9.plot(n_cat4_d.med_tilt,n_cat4_d.frac,label='North Different' )
-ax9.plot(n_cat4_s.med_tilt,n_cat4_s.frac,label='North Similar  ' )
-ax9.plot(s_cat4_d.med_tilt,s_cat4_d.frac,label='South Different' )
-ax9.plot(s_cat4_s.med_tilt,s_cat4_s.frac,label='South Similar  ' )
+ax9.plot(n_cat4_d.med_tilt,n_cat4_d.frac,label='North After' )
+ax9.plot(n_cat4_s.med_tilt,n_cat4_s.frac,label='North Between' )
+ax9.plot(s_cat4_d.med_tilt,s_cat4_d.frac,label='South After' )
+ax9.plot(s_cat4_s.med_tilt,s_cat4_s.frac,label='South Between' )
 
 
 #Add A-D stats to plot
@@ -875,10 +876,10 @@ k2_ss_d =stats.ks_2samp(s_cat4_s.med_tilt.values,s_cat4_d.med_tilt.values)
 #ax9.text(40,0.35,'AD(NN;D/S) = {0:5.4f}'.format(ad_nn_d[2]),fontsize=12)
 #ax9.text(40,0.25,'AD(SS;D/S) = {0:5.4f}'.format(ad_ss_d[2]),fontsize=12)
 #Ks-two Plots
-ax9.text(40,0.60,'K2(NS;S) = {0:5.4f}  '.format(k2_ns_s[1]),fontsize=12)
-ax9.text(40,0.50,'K2(NS;D) = {0:5.4f}  '.format(k2_ns_d[1]),fontsize=12)
-ax9.text(40,0.40,'K2(NN;D/S) = {0:5.4f}'.format(k2_nn_d[1]),fontsize=12)
-ax9.text(40,0.30,'K2(SS;D/S) = {0:5.4f}'.format(k2_ss_d[1]),fontsize=12)
+ax9.text(40,0.52,'p(NS;B/B) = {0:5.4f}  '.format(k2_ns_s[1]),fontsize=12)
+ax9.text(40,0.47,'p(NS;A/A) = {0:5.4f}  '.format(k2_ns_d[1]),fontsize=12)
+ax9.text(40,0.42,'p(NN;A/B) = {0:5.4f}'.format(k2_nn_d[1]),fontsize=12)
+ax9.text(40,0.37,'p(SS;A/B) = {0:5.4f}'.format(k2_ss_d[1]),fontsize=12)
 #ax9.text(50,0.20,'NN (S) = {0:5.4f}'.format(ad_nn_s[2]),fontsize=12)
 #ax9.text(50,0.10,'SS (S) = {0:5.4f}'.format(ad_ss_s[2]),fontsize=12)
 
@@ -1025,10 +1026,10 @@ fancy_plot(ax3[plot_rows-1])
 
 
 
-ax[1].set_yticklabels([])
-ax2[1].set_yticklabels([])
-ax2[3].set_yticklabels([])
-ax5[1].set_yticklabels([])
+#ax[1].set_yticklabels([])
+#ax2[1].set_yticklabels([])
+#ax2[3].set_yticklabels([])
+#ax5[1].set_yticklabels([])
 
 ax[0].set_title('Northern')
 ax[1].set_title('Southern')
@@ -1047,10 +1048,11 @@ ax5[0].set_xlabel('Med. Tilt [Deg.]')
 ax5[1].set_xlabel('Med. Tilt [Deg.]')
 
 ax[0].set_ylabel('Cumulative Fraction')
+ax[1].set_ylabel('Cumulative Fraction')
 ax1.set_ylabel('Med. Tilt [Deg.]')
 ax1.set_ylabel('Tilt [Deg.]')
 ax2[0].set_ylabel('Cumulative Fraction')
-ax2[2].set_ylabel('Cumulative Fraction')
+ax2[1].set_ylabel('Cumulative Fraction')
 ax4[0].set_ylabel("Med. Centroid Lat. [Deg.]")
 ax4[1].set_ylabel("Med. Centroid Lat. [Deg.]")
 ax5[0].set_ylabel('Cumulative Fraction')
@@ -1067,9 +1069,9 @@ fancy_plot(ax5[1])
 #fancy_plot(ax7)
 
 
-ax[0].legend(loc='upper left',frameon=False,fontsize=18)
+ax[0].legend(loc='upper left',frameon=False,fontsize=14)
 ax1.legend(loc='upper center',frameon=True ,handletextpad=-.112,scatterpoints=1,fontsize=18)
-ax2[0].legend(loc='upper left',frameon=False,fontsize=18)
+ax2[0].legend(loc='upper left',frameon=False,fontsize=16)
 ax3[0].legend(loc='upper left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=18,handlelength=1)
 ax4[0].legend(loc='lower right',frameon=False,fontsize=18)
 ax5[0].legend(loc='upper left',frameon=False,fontsize=18)
