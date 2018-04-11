@@ -98,9 +98,15 @@ rng = pd.date_range('2011-06-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_ti
 #rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_timestamp()
 
 #read in filament categories given in Brianna's code
-#fil = pd.read_pickle('filament_catagories.pic')
-#update with hgs coordinates 2018/02/05 J. Prchlik
+#afil = pd.read_pickle('filament_catagories.pic')
+#update with hgs coordinates for averages 2018/02/05 J. Prchlik
 fil = pd.read_pickle('filament_categories_hgs_mean_l.pic')
+
+#Fix that some filaments are missing their track id categories 2018/04/11 J. Prchlik (Need to check if this affects median value still)
+fil.loc[fil[fil.cat_id == 1].track_id.index.unique(),'cat_id'] = 1
+fil.loc[fil[fil.cat_id == 2].track_id.index.unique(),'cat_id'] = 2
+fil.loc[fil[fil.cat_id == 3].track_id.index.unique(),'cat_id'] = 3
+fil.loc[fil[fil.cat_id == 4].track_id.index.unique(),'cat_id'] = 4
 
 #test dynamic time warping
 time_warp = False
@@ -118,6 +124,37 @@ fil_dict['fil123'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2) | (fil.cat_id =
 fil_dict['fil3'] = [fil[fil.cat_id == 3],'teal' ,'s','-.',"Cat. 3"]
 fil_dict['fil4'] = [fil[fil.cat_id == 4],'blue' ,'D','--' ,"Cat. 4"]
 fil_dict['allf'] = [fil[fil.cat_id != 0],'blue' ,'D',':' ,"All Filaments"]
+
+
+#count number of instances in track
+#fil_dict[i][0].groupby('track_id').track_id.count() 
+
+#check that the tilt is not decreasing as a function of x value
+fig_ti,ax_ti = plt.subplots(figsize=(8,8))
+
+l = ['fil4']
+
+#Get the slope of the tilt and find estimated change in tilt over time
+for i in l:
+    tilt_slope = fil_dict[i][0].groupby('track_id').apply(lambda v: stats.linregress(v.meanx,v.fi_tilt)[0])
+    tilt_range = fil_dict[i][0].groupby('track_id').apply(lambda v: v.meanx.max()-v.meanx.min())
+    tilt_maskv = fil_dict[i][0].loc[tilt_slope.index].index.duplicated(keep='first')
+    tilt_angle = fil_dict[i][0][~tilt_maskv].med_tilt
+    
+    ax_ti.scatter(tilt_angle.abs(),tilt_slope*tilt_range,marker=fil_dict[i][2],color=fil_dict[i][1],label=fil_dict[i][3])
+    ax_ti.errorbar(0.,(tilt_slope*tilt_range).mean(),
+                   yerr=3.*(tilt_slope*tilt_range).std()/np.sqrt(tilt_slope.count()),marker='s',color='black')
+
+fancy_plot(ax_ti)
+
+ax_ti.set_ylabel('$\delta$Tilt from Rotation [Deg.]')
+ax_ti.set_xlabel('$|$Tilt$|$ [Deg.]')
+
+fig_ti.savefig('plots/tilt_v_x.png',bbox_pad=.1,bbox_inches='tight')
+fig_ti.savefig('plots/tilt_v_x.eps',bbox_pad=.1,bbox_inches='tight')
+plt.close(fig_ti)
+
+
 
 
 #setup figures
@@ -910,6 +947,7 @@ gam0 = 32.1
 latg = np.arange(0,90)
 ax_joy.plot(latg,gam0*np.sin(np.radians(latg)),'--',color='black',linewidth=3)
 
+ax_joy.legend(loc='upper right',frameon=False,scatterpoints=1)
 
 fancy_plot(ax_joy)
 ax_joy.set_xlabel('Latitude [Deg.]')
@@ -918,6 +956,10 @@ ax_joy.set_ylabel('$|$Tilt$|$ [Deg.]')
 
 fig_joy.savefig('plots/filaments_joys_law.png',bbox_pad=.1,bbox_inches='tight')
 fig_joy.savefig('plots/filaments_joys_law.eps',bbox_pad=.1,bbox_inches='tight')
+
+
+
+
 
 #Correlation or Anti-correlation in filament tilt for category 4
 # (2017/12/18 J. Prchlik)
