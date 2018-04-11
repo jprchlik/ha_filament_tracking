@@ -895,6 +895,25 @@ fancy_plot(ax9)
 fig9.savefig('plots/tilt_during_diff_cat4.png',bbox_pad=.1,bbox_inches='tight')
 fig9.savefig('plots/tilt_during_diff_cat4.eps',bbox_pad=.1,bbox_inches='tight')
 
+
+#Tilt as a function of latitude for inbetween and during/after solar maximum times
+fig_joy, ax_joy = plt.subplots(figsize=(8,8))
+
+#plot all filaments broken up by group
+ax_joy.scatter(n_cat4_d.hgs_y,n_cat4_d.med_tilt,label='North After',color='red',marker='o' )
+ax_joy.scatter(n_cat4_s.hgs_y,n_cat4_s.med_tilt,label='North Between',color='magenta',marker='8' )
+ax_joy.scatter(s_cat4_d.hgs_y,s_cat4_d.med_tilt,label='South After' ,color='black',marker='D')
+ax_joy.scatter(s_cat4_s.hgs_y,s_cat4_s.med_tilt,label='South Between' ,color='gray',marker='s')
+
+
+fancy_plot(ax_joy)
+ax_joy.set_xlabel('Latitude [Deg.]')
+ax_joy.set_ylabel('Tilt [Deg.]')
+
+
+fig_joy.savefig('plots/filaments_joys_law.png',bbox_pad=.1,bbox_inches='tight')
+fig_joy.savefig('plots/filaments_joys_law.eps',bbox_pad=.1,bbox_inches='tight')
+
 #Correlation or Anti-correlation in filament tilt for category 4
 # (2017/12/18 J. Prchlik)
 fig_at, ax_at = plt.subplots(nrows=2,figsize=(6,12))
