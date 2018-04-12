@@ -141,10 +141,11 @@ for i in l:
     tilt_range = fil_dict[i][0].groupby('track_id').apply(lambda v: v.meanx.max()-v.meanx.min())
     tilt_maskv = fil_dict[i][0].loc[tilt_slope.index].index.duplicated(keep='first')
     tilt_angle = fil_dict[i][0][~tilt_maskv].med_tilt
-    
+    #Plot slopes and average slope offset 
     ax_ti.scatter(tilt_angle.abs(),tilt_slope*tilt_range,marker=fil_dict[i][2],color=fil_dict[i][1],label=fil_dict[i][3])
     ax_ti.errorbar(0.,(tilt_slope*tilt_range).mean(),
                    yerr=3.*(tilt_slope*tilt_range).std()/np.sqrt(tilt_slope.count()),marker='s',color='black')
+
 
 fancy_plot(ax_ti)
 
@@ -984,11 +985,12 @@ plt.close(fig_joy)
 
 #Tilt as a function of latitude for inbetween and during/after solar maximum times
 #Catagory 4 only
-fig_joy, axs_joy = plt.subplots(figsize=(16,16),nrows=2,ncols=2,sharex=True)
+fig_joy, axs_joy = plt.subplots(figsize=(16,16),nrows=2,ncols=2,sharex=True,sharey=True)
 axs_joy = axs_joy.ravel()
 fig_joy.subplots_adjust(hspace=0.001,wspace=0.001)
 #Categories to loop over
 heat_map = [n_cat4_d,n_cat4_s,s_cat4_d,s_cat4_s]
+heat_cap = ['NB','NA','SB','SA']
 
 for i,d in enumerate(heat_map):
     ax_joy = axs_joy[i]
@@ -1000,16 +1002,19 @@ for i,d in enumerate(heat_map):
     ccmap = plt.cm.viridis.reversed()
     ccmap.set_under('1.00')
     X, Y = np.meshgrid(xedges, yedges)
-    plotc = ax_joy.pcolormesh(X,Y,H,label=None,cmap=ccmap,vmin=1)
+    plotc = ax_joy.pcolormesh(X,Y,H,label=None,cmap=ccmap,vmin=1,vmax=11)
     #Add Joy's law from Stenflo & Kosovichev (2012)
     gam0 = 32.1
     latg = np.arange(0,90)
+    #plot heatmap
     ax_joy.plot(latg,gam0*np.sin(np.radians(latg)),'--',color='black',linewidth=3)
+    #add text label
+    ax_joy.text(65,20,heat_cap[i])
     #switch to axis locator J. Prchlik
     axins = inset_axes(ax_joy,
                        width="5%",  # width = 30% of parent_bbox
                        height="40%",  # height : 1 inch
-                       loc=1,borderpad=3.0)
+                       loc=1,borderpad=4.0)
     cbar = fig2.colorbar(plotc,cax=axins)
     cbar.set_label('Filaments [\#]',fontsize=18)
     fancy_plot(ax_joy)
