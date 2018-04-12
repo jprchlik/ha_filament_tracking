@@ -11,6 +11,7 @@ mpl.rcParams['savefig.dpi'] = 600
 
 import matplotlib.dates as mdates
 
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes, zoomed_inset_axes,InsetPosition
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -934,24 +935,50 @@ fig9.savefig('plots/tilt_during_diff_cat4.eps',bbox_pad=.1,bbox_inches='tight')
 
 
 #Tilt as a function of latitude for inbetween and during/after solar maximum times
-fig_joy, ax_joy = plt.subplots(figsize=(8,8))
+fig_joy, axs_joy = plt.subplots(figsize=(8,24),nrows=3,sharex=True)
+fig_joy.subplots_adjust(hspace=0.001,wspace=0.001)
 
-#plot all filaments broken up by group
-ax_joy.scatter( n_cat4_d.med_l,np.abs(n_cat4_d.med_tilt),label='North After',color='red',marker='o' )
-ax_joy.scatter( n_cat4_s.med_l,np.abs(n_cat4_s.med_tilt),label='North Between',color='magenta',marker='8' )
-ax_joy.scatter(-s_cat4_d.med_l,np.abs(s_cat4_d.med_tilt),label='South After' ,color='black',marker='D')
-ax_joy.scatter(-s_cat4_s.med_l,np.abs(s_cat4_s.med_tilt),label='South Between' ,color='gray',marker='s')
 
-#Add Joy's law from Stenflo & Kosovichev (2012)
-gam0 = 32.1
-latg = np.arange(0,90)
-ax_joy.plot(latg,gam0*np.sin(np.radians(latg)),'--',color='black',linewidth=3)
+heat_map = ['allf','fil123','fil4']
 
-ax_joy.legend(loc='upper right',frameon=False,scatterpoints=1)
+resx = 5
+resy = 5
+xbins = np.arange(0,100,resx)
+ybins = np.arange(0,100,resy)
 
-fancy_plot(ax_joy)
-ax_joy.set_xlabel('Latitude [Deg.]')
-ax_joy.set_ylabel('$|$Tilt$|$ [Deg.]')
+for i,j in enumerate(heat_map):
+    ax_joy = axs_joy[i]
+    d = fil_dict[j]
+    d[0] = d[0][~d[0].index.duplicated(keep='last')]
+    #plot all filaments broken up by group
+    #ax_joy.scatter( n_cat4_d.med_l,np.abs(n_cat4_d.med_tilt),label='North After',color='red',marker='o' )
+    #ax_joy.scatter( n_cat4_s.med_l,np.abs(n_cat4_s.med_tilt),label='North Between',color='magenta',marker='8' )
+    #ax_joy.scatter(-s_cat4_d.med_l,np.abs(s_cat4_d.med_tilt),label='South After' ,color='black',marker='D')
+    #ax_joy.scatter(-s_cat4_s.med_l,np.abs(s_cat4_s.med_tilt),label='South Between' ,color='gray',marker='s')
+    #Switch to 2D histogram per Kathy's comments
+    H,xedges,yedges = np.histogram2d(np.abs(d[0].med_l),np.abs(d[0].med_tilt),bins=(xbins,ybins))
+    H = H.T #transpose for plotting
+    #set up X,Y values
+    ccmap = plt.cm.viridis.reversed()
+    ccmap.set_under('1.00')
+    X, Y = np.meshgrid(xedges, yedges)
+    plotc = ax_joy.pcolormesh(X,Y,H,label=None,cmap=ccmap,vmin=1)
+    #Add Joy's law from Stenflo & Kosovichev (2012)
+    gam0 = 32.1
+    latg = np.arange(0,90)
+    ax_joy.plot(latg,gam0*np.sin(np.radians(latg)),'--',color='black',linewidth=3)
+    #switch to axis locator J. Prchlik
+    axins = inset_axes(ax_joy,
+                       width="5%",  # width = 30% of parent_bbox
+                       height="40%",  # height : 1 inch
+                       loc=1,borderpad=3.0)
+    cbar = fig2.colorbar(plotc,cax=axins)
+    cbar.set_label('Filaments [\#]',fontsize=18)
+    #ax_joy.set_title(j.upper())
+    #ax_joy.legend(loc='upper right',frameon=False,scatterpoints=1)
+    fancy_plot(ax_joy)
+    if i == len(heat_map)-1: ax_joy.set_xlabel('Latitude [Deg.]')
+    ax_joy.set_ylabel(j.upper()+' $|$Tilt$|$ [Deg.]')
 
 
 fig_joy.savefig('plots/filaments_joys_law.png',bbox_pad=.1,bbox_inches='tight')
