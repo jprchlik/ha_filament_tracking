@@ -939,6 +939,7 @@ fig_joy, axs_joy = plt.subplots(figsize=(8,24),nrows=3,sharex=True)
 fig_joy.subplots_adjust(hspace=0.001,wspace=0.001)
 
 
+#Categories to loop over
 heat_map = ['allf','fil123','fil4']
 
 resx = 5
@@ -950,11 +951,6 @@ for i,j in enumerate(heat_map):
     ax_joy = axs_joy[i]
     d = fil_dict[j]
     d[0] = d[0][~d[0].index.duplicated(keep='last')]
-    #plot all filaments broken up by group
-    #ax_joy.scatter( n_cat4_d.med_l,np.abs(n_cat4_d.med_tilt),label='North After',color='red',marker='o' )
-    #ax_joy.scatter( n_cat4_s.med_l,np.abs(n_cat4_s.med_tilt),label='North Between',color='magenta',marker='8' )
-    #ax_joy.scatter(-s_cat4_d.med_l,np.abs(s_cat4_d.med_tilt),label='South After' ,color='black',marker='D')
-    #ax_joy.scatter(-s_cat4_s.med_l,np.abs(s_cat4_s.med_tilt),label='South Between' ,color='gray',marker='s')
     #Switch to 2D histogram per Kathy's comments
     H,xedges,yedges = np.histogram2d(np.abs(d[0].med_l),np.abs(d[0].med_tilt),bins=(xbins,ybins))
     H = H.T #transpose for plotting
@@ -983,10 +979,46 @@ for i,j in enumerate(heat_map):
 
 fig_joy.savefig('plots/filaments_joys_law.png',bbox_pad=.1,bbox_inches='tight')
 fig_joy.savefig('plots/filaments_joys_law.eps',bbox_pad=.1,bbox_inches='tight')
+plt.close(fig_joy)
 
 
+#Tilt as a function of latitude for inbetween and during/after solar maximum times
+#Catagory 4 only
+fig_joy, axs_joy = plt.subplots(figsize=(16,16),nrows=2,ncols=2,sharex=True)
+axs_joy = axs_joy.ravel()
+fig_joy.subplots_adjust(hspace=0.001,wspace=0.001)
+#Categories to loop over
+heat_map = [n_cat4_d,n_cat4_s,s_cat4_d,s_cat4_s]
 
+for i,d in enumerate(heat_map):
+    ax_joy = axs_joy[i]
+    #plot all filaments broken up by group
+    #Switch to 2D histogram per Kathy's comments
+    H,xedges,yedges = np.histogram2d(np.abs(d.med_l),np.abs(d.med_tilt),bins=(xbins,ybins))
+    H = H.T #transpose for plotting
+    #set up X,Y values
+    ccmap = plt.cm.viridis.reversed()
+    ccmap.set_under('1.00')
+    X, Y = np.meshgrid(xedges, yedges)
+    plotc = ax_joy.pcolormesh(X,Y,H,label=None,cmap=ccmap,vmin=1)
+    #Add Joy's law from Stenflo & Kosovichev (2012)
+    gam0 = 32.1
+    latg = np.arange(0,90)
+    ax_joy.plot(latg,gam0*np.sin(np.radians(latg)),'--',color='black',linewidth=3)
+    #switch to axis locator J. Prchlik
+    axins = inset_axes(ax_joy,
+                       width="5%",  # width = 30% of parent_bbox
+                       height="40%",  # height : 1 inch
+                       loc=1,borderpad=3.0)
+    cbar = fig2.colorbar(plotc,cax=axins)
+    cbar.set_label('Filaments [\#]',fontsize=18)
+    fancy_plot(ax_joy)
+    if i >= len(heat_map)-2: ax_joy.set_xlabel('Latitude [Deg.]')
+    if ((i == 0) | (i == 2)): ax_joy.set_ylabel('$|$Tilt$|$ [Deg.]')
 
+fig_joy.savefig('plots/filaments_wo_cavity_joys_law.png',bbox_pad=.1,bbox_inches='tight')
+fig_joy.savefig('plots/filaments_wo_cavity_joys_law.eps',bbox_pad=.1,bbox_inches='tight')
+plt.close(fig_joy)
 
 #Correlation or Anti-correlation in filament tilt for category 4
 # (2017/12/18 J. Prchlik)
