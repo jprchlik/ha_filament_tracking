@@ -69,6 +69,12 @@ rng = pd.date_range('2012-01-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_ti
 #read in filament categories file
 fil = pd.read_pickle('filament_categories_hgs_mean_l.pic')
 
+#indices to drop after visual inspection 2018/04/19 J. Prchlik
+drop_ind = [10209,10174,11773,9657,9654,7362,12592,13736]
+
+#drop specificed indices from inspection 2018/04/19 J. Prchlik
+fil.drop(drop_ind,inplace=True)
+
 #create hgs mean latitude column 2018/02/05 J. Prchlik
 ####Create new pickle file filament_categories_hgs_mean_l.pic
 ####fil['med_l'] = np.nan
@@ -154,8 +160,8 @@ for j,i in enumerate(fil_keys):
 
     ax2[j].plot(np.abs(n.med_l),n.dis,color='red',label='Nothern')
     ax2[j].plot(np.abs(s.med_l),1.-s.dis,color='black',linestyle='--',label='Southern')
-    if ad[-1] < 1.0: ax2[j].text(100,.1,'p(A-D) = {0:5.4f}'.format(ad[-1]),fontsize=18)
-    ax2[j].text(100,.15,'p(KS2) = {0:5.4f}'.format(k2[-1]),fontsize=18)
+    if ad[-1] < 1.0: ax2[j].text(5,.8,'p(A-D) = {0:5.4f}'.format(ad[-1]),fontsize=18)
+    ax2[j].text(5,.75,'p(KS2) = {0:5.4f}'.format(k2[-1]),fontsize=18)
     ax2[j].set_title(d[4])
     ax2[j].set_xlabel(r"$|$Med. Latitude$|$ [Deg.]")
     ax2[j].set_xlim([0,90])
@@ -219,16 +225,16 @@ for j,i in enumerate(fil_keys):
         k24s = stats.ks_2samp(d4s.med_l.values,s123.med_l.values)
 
         #show fit stat on plot
-        if ad3n[-1] < 1.0: ax5[0].text(550,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3n[-1]),fontsize=14)
-        ax5[0].text(550,.15,'p(KS2;12,3) = {0:5.4f}'.format(k23n[-1]),fontsize=14)
-        if ad3s[-1] < 1.0: ax5[1].text(550,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3s[-1]),fontsize=14)
-        ax5[1].text(550,.15,'p(KS2;12,3) = {0:5.4f}'.format(k23s[-1]),fontsize=14)
+        if ad3n[-1] < 1.0: ax5[0].text(45,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3n[-1]),fontsize=14)
+        ax5[0].text(45,.15,'p(KS2;12,3) = {0:5.4f}'.format(k23n[-1]),fontsize=14)
+        if ad3s[-1] < 1.0: ax5[1].text(45,.1,'p(A-D;12,3) = {0:5.4f}'.format(ad3s[-1]),fontsize=14)
+        ax5[1].text(45,.15,'p(KS2;12,3) = {0:5.4f}'.format(k23s[-1]),fontsize=14)
 
         #show fit stat on plot for 1, 2, and 3 vs 4
-        if ad4n[-1] < 1.0: ax5[0].text(550,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4n[-1]),fontsize=14)
-        ax5[0].text(550,.05,'p(KS2;123,4) = {0:5.4f}'.format(k24n[-1]),fontsize=14)
-        if ad4s[-1] < 1.0: ax5[1].text(550,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4s[-1]),fontsize=14)
-        ax5[1].text(550,.05,'p(KS2;123,4) = {0:5.4f}'.format(k24s[-1]),fontsize=14)
+        if ad4n[-1] < 1.0: ax5[0].text(45,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4n[-1]),fontsize=14)
+        ax5[0].text(45,.05,'p(KS2;123,4) = {0:5.4f}'.format(k24n[-1]),fontsize=14)
+        if ad4s[-1] < 1.0: ax5[1].text(45,.01,'p(A-D;123,4) = {0:5.4f}'.format(ad4s[-1]),fontsize=14)
+        ax5[1].text(45,.05,'p(KS2;123,4) = {0:5.4f}'.format(k24s[-1]),fontsize=14)
 
 
     elif ((i == 'fil3') | (i == 'fil4')):
@@ -279,7 +285,7 @@ for j,i in enumerate(tilt_time):
     #Y title
     ax3[j].set_ylabel("$|$Med. Lat.$|$ [Deg.]\r {0}".format(i.replace('fil','Category ').replace('12','1 and 2').replace('allf','All')))
     fancy_plot(ax3[j])
-    ax3[j].set_ylim([0.,990.])
+    ax3[j].set_ylim([0.,90.])
     fancy_plot(ax3[j])
 
     #resample with fixed cadence
