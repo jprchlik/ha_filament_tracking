@@ -91,6 +91,10 @@ e_d2 = '2015/01/01'
 s_s1 = '2012/08/01'
 e_s1 = '2013/10/20'
 
+
+#indices to drop after visual inspection 2018/04/19 J. Prchlik
+drop_ind = [10209,10174,11773,9657,9654,7362,12592,13736]
+
 #sampling frequency 
 sam = '4W'
 #get pandas timeseries representation for filament tracking code time range
@@ -103,7 +107,12 @@ rng = pd.date_range('2011-06-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_ti
 #update with hgs coordinates for averages 2018/02/05 J. Prchlik
 fil = pd.read_pickle('filament_categories_hgs_mean_l.pic')
 
+
+#drop specificed indices from inspection 2018/04/19 J. Prchlik
+fil.drop(drop_ind,inplace=True)
+
 #Fix that some filaments are missing their track id categories 2018/04/11 J. Prchlik (Need to check if this affects median value still)
+# It will not affect media value because we use track id for median value not track id+catagory 2018/04/19 J. Prchlik 
 fil.loc[fil[fil.cat_id == 1].track_id.index.unique(),'cat_id'] = 1
 fil.loc[fil[fil.cat_id == 2].track_id.index.unique(),'cat_id'] = 2
 fil.loc[fil[fil.cat_id == 3].track_id.index.unique(),'cat_id'] = 3
@@ -180,12 +189,34 @@ norm_tilt = np.sort(norm_tilt)
 
 
 #compare stable vs unstable filaments
+#Add north parameter 
 stab_keys = ['fil1','fil2','fil12','fil123','fil3','fil4','allf']
 for i in stab_keys: 
     d = fil_dict[i]
     d[0]['north'] = 0
     d[0]['north'][d[0].med_l > 0.] = 1
 
+
+
+# get total occurances for a given track
+# Not required 2018/04/19 num_inst is correct
+# need to check to recount
+allf = fil_dict['allf'][0]
+#cnt_track = allf.groupby('track_id').track_id.count()
+
+
+#remove duplicates
+allf = allf[~allf.index.duplicated(keep='first')]
+
+#Add between maxima keyword
+allf['bet_max'] = 0
+allf.set_index(allf.event_starttime_dt,inplace=True)
+allf.loc[s_s1:e_s1,'bet_max'] = 1 
+
+#parameter to write to tex file
+w_p = ['track_id','track_start','track_end','med_l','north','med_tilt','fi_length_summed_med','cat_id','num_inst','bet_max']
+#Write important parameters to output file
+allf[w_p].sort_values(by=['track_start']).to_latex('ha_filament_table.tex',index_names=False)
 
 #Keys to plot cumlative distribution for 2018/30/30 J. prchlik
 cuml_keys = ['fil123','fil4']
