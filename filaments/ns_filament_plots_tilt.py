@@ -213,10 +213,14 @@ allf['bet_max'] = 0
 allf.set_index(allf.event_starttime_dt,inplace=True)
 allf.loc[s_s1:e_s1,'bet_max'] = 1 
 
+#round off the filament length
+allf['fi_len_round'] = allf.fi_length_summed_med.map('{:,.3e}'.format)
+
 #parameter to write to tex file
-w_p = ['track_id','track_start','track_end','med_l','north','med_tilt','fi_length_summed_med','cat_id','num_inst','bet_max']
+w_p = ['track_id','track_start','track_end','med_l','north','med_tilt','fi_len_round','cat_id','num_inst','bet_max']
 #Write important parameters to output file
-allf[w_p].sort_values(by=['track_start']).to_latex('ha_filament_table.tex',index_names=False)
+allf[w_p].sort_values(by=['track_start']).to_latex('ha_filament_table.tex',index_names=False,float_format='%.1f')
+
 
 #Keys to plot cumlative distribution for 2018/30/30 J. prchlik
 cuml_keys = ['fil123','fil4']
