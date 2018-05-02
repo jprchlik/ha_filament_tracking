@@ -130,9 +130,9 @@ fil_keys = ['fil1','fil2','fil3','fil4']
 fil_dict['fil1'] = [fil[fil.cat_id == 1],'red'  ,'o','-' ,"Cat. 1"]
 fil_dict['fil2'] = [fil[fil.cat_id == 2],'black','x','--',"Cat. 2"]
 fil_dict['fil12'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2))],'red'  ,'o','-' ,"Cat. 1 and 2"]
-fil_dict['fil123'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2) | (fil.cat_id == 3))],'purple','^','-' ,"Cat. 1, 2, and 3"]
+fil_dict['fil123'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2) | (fil.cat_id == 3))],'purple','^','-' ,"Cavity"]
 fil_dict['fil3'] = [fil[fil.cat_id == 3],'teal' ,'s','-.',"Cat. 3"]
-fil_dict['fil4'] = [fil[fil.cat_id == 4],'blue' ,'D','--' ,"Cat. 4"]
+fil_dict['fil4'] = [fil[fil.cat_id == 4],'blue' ,'D','--' ,"No Cavity"]
 fil_dict['allf'] = [fil[fil.cat_id != 0],'blue' ,'D',':' ,"All Filaments"]
 
 
@@ -171,12 +171,13 @@ plt.close(fig_ti)
 #setup figures
 fig, ax = plt.subplots(nrows=2,figsize=(4.25,12.5))
 fig1, ax1 = plt.subplots(figsize=(11.,8.5))
-fig2, ax2 = plt.subplots(figsize=(4.25,12.5),nrows=2) #Switched to two variables only 2018/03/30 J. Prchlik,nrows=2)
+fig2, ax2 = plt.subplots(figsize=(12.5,8.5),ncols=2,sharey=True) #Switched to two variables only 2018/03/30 J. Prchlik,nrows=2) Switch to columns for presentation 2018/05/02
 fig4, ax4 = plt.subplots(nrows=2,figsize=(8.5,11),sharex=True)
 fig5, ax5 = plt.subplots(nrows=2,figsize=(4.25,12))
 ax2 = ax2.ravel()
 #fig.subplots_adjust(hspace=0.001,wspace=0.001)
 fig4.subplots_adjust(hspace=0.001)
+fig2.subplots_adjust(hspace=0.001,wspace=0.001) #squished together 2018/05/02 J. Prchlik
 #fig5.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #set up random distribution for comparison
@@ -269,6 +270,12 @@ for j,i in enumerate(cuml_keys):
 
     ax2[j].plot(n.med_tilt,n.dis,color='red',label='Nothern')
     ax2[j].plot(s.med_tilt,s.dis,color='black',linestyle='--',label='Southern')
+    #Added printing of mean values to output
+    print("##################################################################")
+    print(i)
+    print('North = ',n.med_tilt.mean(),n.med_tilt.std()/np.sqrt(len(n)))
+    print('South = ',s.med_tilt.mean(),s.med_tilt.std()/np.sqrt(len(s)))
+    print("##################################################################")
     #removed A-D stat 2018/03/31 J. Prchlik
     #if ad[-1] < 1.0: ax2[j].text(20,.1,'p(A-D) = {0:5.4f}'.format(ad[-1]),fontsize=18)
     ax2[j].text(12,.15,'p(KS2) = {0:4.3f}'.format(k2[-1]),fontsize=12)
@@ -512,7 +519,7 @@ for j,i in enumerate(tilt_time):
 
         #Y title
         #Update width 1, 2, and 3 (i.e. Have a cavity compbined)
-        rax.set_ylabel("Med. Tilt [Deg.]\n {0}".format(i.replace('fil','Category ').replace('123','1, 2, and 3')))
+        rax.set_ylabel("Med. Tilt [Deg.]\n {0}".format(fil_dict[i][4]))
         fancy_plot(rax)
         rax.set_ylim([-90.,90.])
 
@@ -970,13 +977,15 @@ fig9.savefig('plots/tilt_during_diff_cat4.png',bbox_pad=.1,bbox_inches='tight')
 fig9.savefig('plots/tilt_during_diff_cat4.eps',bbox_pad=.1,bbox_inches='tight')
 
 
+#Categories to loop over
+#Just use 123 and 4 2018/05/02
+#heat_map = ['allf','fil123','fil4']
+heat_map = ['fil123','fil4']
 #Tilt as a function of latitude for inbetween and during/after solar maximum times
-fig_joy, axs_joy = plt.subplots(figsize=(8,24),nrows=3,sharex=True)
+fig_joy, axs_joy = plt.subplots(figsize=(6,len(heat_map)*6),nrows=len(heat_map),sharex=True)
 fig_joy.subplots_adjust(hspace=0.001,wspace=0.001)
 
 
-#Categories to loop over
-heat_map = ['allf','fil123','fil4']
 
 resx = 5
 resy = 5
@@ -999,6 +1008,15 @@ for i,j in enumerate(heat_map):
     gam0 = 32.1
     latg = np.arange(0,90)
     ax_joy.plot(latg,gam0*np.sin(np.radians(latg)),'--',color='black',linewidth=3)
+
+    #Print percentage below Joy's Law 2018/05/02 J. Prchlik
+    print('################################################')
+    print(j)
+    below_joy, = np.where(np.abs(d[0].med_tilt) < gam0*np.sin(np.radians(np.abs(d[0].med_l))))
+    print(below_joy.size,len(d[0]))
+    print('################################################')
+
+
     #switch to axis locator J. Prchlik
     axins = inset_axes(ax_joy,
                        width="5%",  # width = 30% of parent_bbox
@@ -1010,7 +1028,8 @@ for i,j in enumerate(heat_map):
     #ax_joy.legend(loc='upper right',frameon=False,scatterpoints=1)
     fancy_plot(ax_joy)
     if i == len(heat_map)-1: ax_joy.set_xlabel('Latitude [Deg.]')
-    ax_joy.set_ylabel(j.upper()+' $|$Tilt$|$ [Deg.]')
+    #Updated to filaments with and without Cavities
+    ax_joy.set_ylabel(fil_dict[j][4]+' $|$Tilt$|$ [Deg.]')
 
 
 fig_joy.savefig('plots/filaments_joys_law.png',bbox_pad=.1,bbox_inches='tight')
@@ -1240,7 +1259,7 @@ fancy_plot(ax5[1])
 ax[0].legend(loc='upper left',frameon=False,fontsize=14)
 ax1.legend(loc='upper center',frameon=True ,handletextpad=-.112,scatterpoints=1,fontsize=18)
 ax2[0].legend(loc='upper left',frameon=False,fontsize=16)
-ax3[0].legend(loc='upper left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=18,handlelength=1)
+ax3[0].legend(loc='upper left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=12,handlelength=1)
 ax4[0].legend(loc='lower right',frameon=False,fontsize=18)
 ax5[0].legend(loc='upper left',frameon=False,fontsize=18)
 ax6.legend(loc='lower right',scatterpoints=1,handletextpad=-0.112,frameon=False,fontsize=12)
