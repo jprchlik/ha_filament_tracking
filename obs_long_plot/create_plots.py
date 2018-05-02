@@ -16,7 +16,20 @@ from astropy.coordinates import SkyCoord
 #get frame for coordiantes
 from sunpy.coordinates import frames
 import astropy.units as u
+import os
+import sunpy
+from sunpy.cm import cm
 
+#get a median filter for wavelet transformation
+from matplotlib.colors import Normalize
+from scipy.signal import medfilt
+
+#J. Prchlik 2018/05/02
+import pywt
+#Interested in the Stationary Wavelet Transformation or a Trous or starlet (swt2)
+
+from glob import glob
+import get_synoptic_files as gsf
 
 from sunpy.sun import solar_semidiameter_angular_size
 import astropy.units as u
@@ -24,11 +37,38 @@ from astropy.io import fits as  pyfits
 import datetime
 
 
+#J. Prchlik 2018/05/02
+#Added to give physical coordinates
+def img_extent(img):
+    """
+    Give physical cooridnates for image mapping to physical coordinates
+    """
+# get the image coordinates in pixels
+    px0 = img.meta['crpix1']
+    py0 = img.meta['crpix2']
+# get the image coordinates in arcsec 
+    ax0 = img.meta['crval1']
+    ay0 = img.meta['crval2']
+# get the image scale in arcsec 
+    axd = img.meta['cdelt1']
+    ayd = img.meta['cdelt2']
+#get the number of pixels
+    tx,ty = img.data.shape
+#get the max and min x and y values
+    minx,maxx = px0-tx,tx-px0
+    miny,maxy = py0-ty,ty-py0
+#convert to arcsec
+    maxx,minx = maxx*axd,minx*axd
+    maxy,miny = maxy*ayd,miny*ayd
+
+    return maxx,minx,maxy,miny
+
+
 class halpha_plot:
     """ A class which creates an image from an input file.
         Currently used to create H alpha GONG images."""
 
-    def __init__(self,dat,ifile,pdir,lref=False,dpi=100,ext='png'):
+    def __init__(self,dat,ifile,pdir,lref=False,dpi=100,ext='png',add_aia=False):
         """Initializes variables to be used by the halpha_plot class.
 
            This function just creates the object to be class later.
@@ -47,6 +87,8 @@ class halpha_plot:
               Dots Per Inch of output image (Default = 100)
            ext: string. optional
               File extension of output image (Default = 'png')
+           add_aia: Boolean, optional
+              Add AIA 193 image to outer edge (Default = False)
          
            Returns
            -------
@@ -59,6 +101,7 @@ class halpha_plot:
         self.lref = lref
         self.dpi  = dpi
         self.ext  = ext
+        self.add_aia= add_aia
 
     def draw_lines(self):
         """
@@ -80,6 +123,88 @@ class halpha_plot:
         self.ax.plot(xs,yt,'-.',color='red',alpha=1.,linewidth=5,zorder=5000)
         self.ax.plot(xs,yb,'-.',color='red',alpha=1.,linewidth=5,zorder=5000)
         
+
+    def add_aia_image(self):
+
+        file_fmt = '{0:%Y/%m/%d/H%H00/AIA%Y%m%d_%H%M_}'
+        tries = 4
+        wave = [193]
+         
+        gsf.download(self.stop,self.stop+datetime.timedelta(minutes=tries),
+                     datetime.timedelta(minutes=1),'',nproc=1,
+                     syn_arch='http://jsoc.stanford.edu/data/aia/synoptic/',
+                     f_dir=file_fmt,d_wav=wave)
+
+        #Decide which AIA file to overplot
+        nofile = True
+        run = 0
+        while nofile:
+            testfile = file_fmt.format(self.stop+datetime.timedelta(minutes=run))+'{0:04d}.fits'.format(wave[0])
+            #exit once you find the file
+            if os.path.isfile(testfile):
+                filep = testfile
+                nofile = False
+            run += 1
+            #exit after tries
+            if run == tries+1:
+                nofile = False
+
+        img = sunpy.map.Map(filep)
+        #Block add J. Prchlik (2016/10/06) to give physical coordinate values 
+        #return extent of image
+        maxx,minx,maxy,miny = img_extent(img)
+
+        #Add wavelet transformation J. Prchlik 2018/01/17
+        wav_img = img.data
+        d_size = 15
+        #get median filter
+        n_back = medfilt(wav_img,kernel_size=d_size)
+        #subtract median filter
+        img_sub = wav_img-n_back
+
+        #Use Biorthogonal Wavelet
+        wavelet = 'bior2.6'
+
+        #use 6 levels
+        n_lev = 6
+        o_wav = pywt.swt2(img_sub, wavelet, level=n_lev )
+        #only use the first 4
+        f_img = pywt.iswt2(o_wav[0:4],wavelet)
+        #Add  wavelet back into image
+        f_img = f_img+wav_img
+
+        #remove zero values
+        f_img[f_img < 0.] = 0.
+
+
+        #set alpha values only works with png file 2018/05/02 J. Prchlik
+        #alphas = np.ones(f_img.shape)
+        #alphas[:,:] = np.linspace(1,0,f_img.shape[0])
+        colors = Normalize((15.)**0.25,(3500.)**0.25,clip=True)
+        #img_193 = cmap((f_img)**0.25) 
+        img_193 = cm.sdoaia193(colors((f_img)**0.25))
+
+
+        #get radius values and convert to arcsec
+        mesh_x2, mesh_y2 = np.meshgrid(np.arange(img.data.shape[0]),np.arange(img.data.shape[1]))
+        mesh_x2 = mesh_x2.T*(maxx-minx)/f_img.shape[0]+minx
+        mesh_y2 = mesh_y2.T*(maxy-miny)/f_img.shape[1]+miny
+
+        #mask out less than a solar radius
+        rsun = sunpy.sun.solar_semidiameter_angular_size(t=img.meta['date-obs'][:-1].replace('T',' ')).value
+        r2 = np.sqrt(mesh_x2**2+mesh_y2**2)/rsun
+
+        rmin = .98
+        rfad = 1.02
+        rep2 = (r2 < rmin) 
+        rep3 = ((r2 > rmin) & (r2 < rfad))
+        img_193[...,3][rep2] = 0
+        img_193[...,3][rep3] = (r2[rep3]-rmin)/(rfad-rmin)
+
+        #plot the image in matplotlib
+        self.ax.imshow(img_193,interpolation='none',cmap=cm.sdoaia193,origin='lower',vmin=(15.)**0.25,vmax=(3500.)**0.25,extent=[minx,maxx,miny,maxy])
+
+
 
   
     def calc_poly_values(self,coor):
@@ -268,6 +393,11 @@ class halpha_plot:
             lim = [sf*x0,sf*(x0+sx*dx)]
             self.ax.set_xlim(lim)
             self.ax.set_ylim(lim)
+
+
+
+            #Add AIA plot 2018/05/02 J. Prchlik
+            if self.add_aia: self.add_aia_image()
            
     #remove axis labels just make an image
     #        self.ax.set_xticks(ticks)
