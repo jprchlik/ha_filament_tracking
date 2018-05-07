@@ -509,8 +509,8 @@ for j,i in enumerate(tilt_time):
         rax.errorbar(mbs.index,mbs.med_tilt_mean,xerr=timedelta(days=14),yerr=tot_err_s,capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
         
         #Make tilt versus time plot
-        rax.scatter(bn.index,bn.med_tilt,color='red',marker='o',label='Northern')
-        rax.scatter(bs.index,bs.med_tilt,color='black',marker='D',label='Southern')
+        rax.scatter(bn.index,bn.med_tilt,color='magenta',marker='o',label='Northern')
+        rax.scatter(bs.index,bs.med_tilt,color='grey',marker='D',label='Southern')
 
         #Add different and similar lines 2018/03/30 J. Prchlik
         rax.axvline(mdates.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
@@ -733,6 +733,7 @@ fancy_plot(ax10[plot_rows-1])
 
 ax10[plot_rows-1].set_ylabel('Ave. Sunspots [\#]')
 ax10[plot_rows-1].set_xlabel('Time [UTC]')
+ax10[0].legend(loc='upper left',scatterpoints=1,frameon=False)
 
 fig10.savefig('plots/ar_sunspots_time.png',bbox_pad=.1,bbox_inches='tight')
 fig10.savefig('plots/ar_sunspots_time.eps',bbox_pad=.1,bbox_inches='tight')
