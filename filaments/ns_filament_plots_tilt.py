@@ -4,7 +4,7 @@ mpl.rcParams['lines.linewidth'] = 3
 mpl.rcParams['font.weight'] = 'bold'
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['font.sans-serif'] = 'Helvetica'
-mpl.rcParams['font.size'] = 18
+mpl.rcParams['font.size'] = 28
 #Set default image dpi
 mpl.rcParams['figure.dpi'] = 600
 mpl.rcParams['savefig.dpi'] = 600
@@ -13,6 +13,7 @@ import matplotlib.dates as mdates
 
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes, zoomed_inset_axes,InsetPosition
 
+from matplotlib import ticker
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from fancy_plot import fancy_plot
@@ -278,7 +279,7 @@ for j,i in enumerate(cuml_keys):
     print("##################################################################")
     #removed A-D stat 2018/03/31 J. Prchlik
     #if ad[-1] < 1.0: ax2[j].text(20,.1,'p(A-D) = {0:5.4f}'.format(ad[-1]),fontsize=18)
-    ax2[j].text(12,.15,'p(KS2) = {0:4.3f}'.format(k2[-1]),fontsize=12)
+    #ax2[j].text(12,.15,'p(KS2) = {0:4.3f}'.format(k2[-1]),fontsize=12)
     ax2[j].set_title(d[4])
     ax2[j].set_xlabel('Med. Tilt [Deg.]')
     ax2[j].set_xlim([-95,95])
@@ -513,8 +514,8 @@ for j,i in enumerate(tilt_time):
         rax.scatter(bs.index,bs.med_tilt,color='grey',marker='D',label='Southern')
 
         #Add different and similar lines 2018/03/30 J. Prchlik
-        rax.axvline(mdates.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
-        rax.axvline(mdates.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
+        rax.axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
+        rax.axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
 
         #Y title
@@ -561,10 +562,12 @@ ax3[plot_rows-1].plot(ss_nm.index,ss_nm.n_ss.values,'-',color='red',label='North
 ax3[plot_rows-1].plot(ss_nm.index,ss_nm.s_ss.values,'--',color='black',label='Southern ({0})'.format(sam))
 
 #Add different and similar lines 2018/03/30 J. Prchlik
-ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
-ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
+ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
+ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
-
+#Add tick label rotations for datetime
+for tick in ax3[plot_rows-1].get_xticklabels():
+    tick.set_rotation(25)
 
 
 #Northern Matching
@@ -726,8 +729,8 @@ ax10[plot_rows-1].plot(bn_ar.index,np.abs(bn_ar[check+'_sum'].values),'-',color=
 ax10[plot_rows-1].plot(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),'--',color='black',label='Southern ({0})'.format(sam))
 
 #Add different and similar lines 2018/03/30 J. Prchlik
-ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
-ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
+ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
+ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
 fancy_plot(ax10[plot_rows-1])
 
@@ -791,8 +794,8 @@ ax12[plot_rows-1].scatter(n_ar.index,np.abs(n_ar[check].values),marker='o',color
 ax12[plot_rows-1].scatter(s_ar.index,np.abs(s_ar[check].values),marker='D',color='black',label=None)
 
 #Add different and similar lines 2018/03/30 J. Prchlik
-ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),color='gray',alpha=0.6)
-ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),color='gray',alpha=0.6)
+ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
+ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
 fancy_plot(ax12[plot_rows-1])
 
@@ -1022,13 +1025,16 @@ for i,j in enumerate(heat_map):
     axins = inset_axes(ax_joy,
                        width="5%",  # width = 30% of parent_bbox
                        height="40%",  # height : 1 inch
-                       loc=1,borderpad=3.0)
+                       loc=1,borderpad=2.2)
     cbar = fig2.colorbar(plotc,cax=axins)
+    tick_locator = ticker.MaxNLocator(nbins=5)
+    cbar.locator = tick_locator
+    cbar.update_ticks()
     cbar.set_label('Filaments [\#]',fontsize=18)
     #ax_joy.set_title(j.upper())
     #ax_joy.legend(loc='upper right',frameon=False,scatterpoints=1)
     fancy_plot(ax_joy)
-    if i == len(heat_map)-1: ax_joy.set_xlabel('Latitude [Deg.]')
+    if i == len(heat_map)-1: ax_joy.set_xlabel('$|$Latitude$|$ [Deg.]')
     #Updated to filaments with and without Cavities
     ax_joy.set_ylabel(fil_dict[j][4]+' $|$Tilt$|$ [Deg.]')
 
@@ -1226,20 +1232,20 @@ ax5[1].set_title('Southern')
 #ax4[0].set_title('Northern')
 #ax4[1].set_title('Southern')
 
-ax[0].set_xlabel('Med. Tilt [Deg.]',fontsize=24)
-ax[1].set_xlabel('Med. Tilt [Deg.]',fontsize=24)
+ax[0].set_xlabel('Med. Tilt [Deg.]')
+ax[1].set_xlabel('Med. Tilt [Deg.]')
 ax1.set_xlabel("Med. Centroid Lat. [Deg.]")
-ax3[2].set_xlabel("Time")
-ax4[0].set_xlabel('Med. Tilt [Deg.]',fontsize=24)
-ax4[1].set_xlabel('Med. Tilt [Deg.]',fontsize=24)
-ax5[0].set_xlabel('Med. Tilt [Deg.]',fontsize=24)
-ax5[1].set_xlabel('Med. Tilt [Deg.]',fontsize=24)
+ax3[2].set_xlabel("Time [UTC]")
+ax4[0].set_xlabel('Med. Tilt [Deg.]')
+ax4[1].set_xlabel('Med. Tilt [Deg.]')
+ax5[0].set_xlabel('Med. Tilt [Deg.]')
+ax5[1].set_xlabel('Med. Tilt [Deg.]')
 
-ax[0].set_ylabel('Cumulative Fraction',fontsize=24)
+ax[0].set_ylabel('Cumulative Fraction')
 #ax[1].set_ylabel('Cumulative Fraction',fontsize=24)
 ax1.set_ylabel('Med. Tilt [Deg.]')
 ax1.set_ylabel('Tilt [Deg.]')
-ax2[0].set_ylabel('Cumulative Fraction',fontsize=24)
+ax2[0].set_ylabel('Cumulative Fraction')
 #ax2[1].set_ylabel('Cumulative Fraction',fontsize=24)
 ax4[0].set_ylabel("Med. Centroid Lat. [Deg.]")
 ax4[1].set_ylabel("Med. Centroid Lat. [Deg.]")
