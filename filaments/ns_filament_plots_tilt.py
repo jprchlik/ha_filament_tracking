@@ -109,6 +109,17 @@ rng = pd.date_range('2011-06-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_ti
 fil = pd.read_pickle('filament_categories_hgs_mean_l.pic')
 
 
+#2018/05/10 J. Prchlik
+#get number of track instances per unique time
+group = fil[['num_inst','event_starttime','track_id']].groupby(['track_id','event_starttime'])
+#count number of unique times per track
+track_int = pd.DataFrame(group.size().groupby(level=0).size(),columns=['unq_num'])
+#add back into filament data set
+fil.join(track_int,inplace=True)
+
+
+
+
 #drop specificed indices from inspection 2018/04/19 J. Prchlik
 fil.drop(drop_ind,inplace=True)
 
