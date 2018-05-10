@@ -117,6 +117,8 @@ track_int = pd.DataFrame(group.size().groupby(level=0).size(),columns=['unq_num'
 #add back into filament data set
 fil.join(track_int,inplace=True)
 
+#remove track id with less than 5 instances
+fil = fil.loc[fil.unq_num >= 5,:]
 
 
 
