@@ -147,7 +147,7 @@ fil_dict['fil12'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2))],'red'  ,'o','-
 fil_dict['fil123'] = [fil[((fil.cat_id == 1) | (fil.cat_id == 2) | (fil.cat_id == 3))],'purple','^','-' ,"Cavity"]
 fil_dict['fil3'] = [fil[fil.cat_id == 3],'teal' ,'s','-.',"Cat. 3"]
 fil_dict['fil4'] = [fil[fil.cat_id == 4],'blue' ,'D','--' ,"No Cavity"]
-fil_dict['allf'] = [fil[fil.cat_id != 0],'blue' ,'D',':' ,"All Filaments"]
+fil_dict['allf'] = [fil[((fil.cat_id > 0.5) & (fil.cat_id < 4.5))],'blue' ,'D',':' ,"All Filaments"]
 
 
 #count number of instances in track
@@ -210,7 +210,9 @@ for i in stab_keys:
     d = fil_dict[i]
     d[0]['north'] = 0
     d[0]['north'][d[0].med_l > 0.] = 1
-
+    #remove duplicates early and from all (used to do later) 2018/05/10 
+    fil_dict[i][0] = d[0][~d[0].index.duplicated(keep='first')]
+    
 
 
 # get total occurances for a given track
@@ -527,8 +529,9 @@ for j,i in enumerate(tilt_time):
         rax.scatter(bs.index,bs.med_tilt,color='grey',marker='D',label='Southern')
 
         #Add different and similar lines 2018/03/30 J. Prchlik
-        rax.axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
-        rax.axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
+        #Remove dashed lines for solar cycle 2018/05/10 J. Prchlik
+        ###rax.axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
+        ###rax.axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
 
         #Y title
@@ -575,8 +578,9 @@ ax3[plot_rows-1].plot(ss_nm.index,ss_nm.n_ss.values,'-',color='red',label='North
 ax3[plot_rows-1].plot(ss_nm.index,ss_nm.s_ss.values,'--',color='black',label='Southern ({0})'.format(sam))
 
 #Add different and similar lines 2018/03/30 J. Prchlik
-ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
-ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
+#Remove dashed lines for solar cycle 2018/05/10 J. Prchlik
+###ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
+###ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
 #Add tick label rotations for datetime
 for tick in ax3[plot_rows-1].get_xticklabels():
@@ -741,9 +745,10 @@ ax10[plot_rows-1].errorbar(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),yerr=t
 ax10[plot_rows-1].plot(bn_ar.index,np.abs(bn_ar[check+'_sum'].values),'-',color='red',label='Northern ({0})'.format(sam))
 ax10[plot_rows-1].plot(bs_ar.index,np.abs(bs_ar[check+'_sum'].values),'--',color='black',label='Southern ({0})'.format(sam))
 
-#Add different and similar lines 2018/03/30 J. Prchlik
-ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
-ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
+#Add different and similar lines 2018/03/30 J. Prchlik        
+#Removed lines signifying solar cycle 2018/05/10 J. Prchlik
+###ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
+###ax10[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
 fancy_plot(ax10[plot_rows-1])
 
@@ -806,9 +811,10 @@ ax12[plot_rows-1].plot(bs_ar.index,np.abs(bs_ar[check+'_mean'].values),'--',colo
 ax12[plot_rows-1].scatter(n_ar.index,np.abs(n_ar[check].values),marker='o',color='red',label=None)
 ax12[plot_rows-1].scatter(s_ar.index,np.abs(s_ar[check].values),marker='D',color='black',label=None)
 
-#Add different and similar lines 2018/03/30 J. Prchlik
-ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
-ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
+#Add different and similar lines 2018/03/30 J. Prchlik        
+#Removed lines signfying different parts of the solar cycle
+###ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
+###ax12[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
 fancy_plot(ax12[plot_rows-1])
 
@@ -1019,7 +1025,9 @@ xbins = np.arange(0,100,resx)
 ybins = np.arange(0,100,resy)
 
 #degree position for Joy's Law annotation
-joy_p = 20.
+joy_p = 70.
+#Joy's Law value
+gam0 = 32.1
 
 #loop and plot joy's law
 for i,j in enumerate(heat_map):
@@ -1030,12 +1038,13 @@ for i,j in enumerate(heat_map):
 
     #label line as joy's law in first interation
     if i == 0: ax_joy.annotate("Joy's Law",xy=(joy_p,gam0*np.sin(np.radians(joy_p))),xycoords='data',
-                               xytext=(10.,80.),textcoords='data',arrowprops=dict(facecolor='black',shrink=0.0),
-                               horizontalalignment='right', verticalalignment='top',
-                               fontsize=18)
+                               xytext=(10.,90.),textcoords='data',arrowprops=dict(facecolor='black',shrink=0.0),
+                               horizontalalignment='left', verticalalignment='top',
+                               fontsize=22)
 
     d = fil_dict[j]
-    d[0] = d[0][~d[0].index.duplicated(keep='last')]
+    d[0].set_index(d[0].track_id,inplace=True)
+    #d[0] = d[0][~d[0].index.duplicated(keep='last')]
     #Switch to 2D histogram per Kathy's comments
     H,xedges,yedges = np.histogram2d(np.abs(d[0].med_l),np.abs(d[0].med_tilt),bins=(xbins,ybins))
     H = H.T #transpose for plotting
@@ -1045,7 +1054,6 @@ for i,j in enumerate(heat_map):
     X, Y = np.meshgrid(xedges, yedges)
     plotc = ax_joy.pcolormesh(X,Y,H,label=None,cmap=ccmap,vmin=1)
     #Add Joy's law from Stenflo & Kosovichev (2012)
-    gam0 = 32.1
     latg = np.arange(0,90)
     ax_joy.plot(latg,gam0*np.sin(np.radians(latg)),'--',color='black',linewidth=3)
 
@@ -1072,7 +1080,7 @@ for i,j in enumerate(heat_map):
     fancy_plot(ax_joy)
     if i == len(heat_map)-1: ax_joy.set_xlabel('$|$Latitude$|$ [Deg.]')
     #Updated to filaments with and without Cavities
-    ax_joy.set_ylabel(fil_dict[j][4]+' $|$Tilt$|$ [Deg.]')
+    ax_joy.set_ylabel(fil_dict[j][4].replace('All Filaments','')+' $|$Tilt$|$ [Deg.]')
 
 
 fig_joy.savefig('plots/filaments_joys_law.png',bbox_pad=.1,bbox_inches='tight')
