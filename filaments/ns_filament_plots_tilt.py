@@ -115,7 +115,7 @@ group = fil[['num_inst','event_starttime','track_id']].groupby(['track_id','even
 #count number of unique times per track
 track_int = pd.DataFrame(group.size().groupby(level=0).size(),columns=['unq_num'])
 #add back into filament data set
-fil.join(track_int,inplace=True)
+fil = fil.join(track_int)
 
 #remove track id with less than 5 instances
 fil = fil.loc[fil.unq_num >= 5,:]
@@ -232,7 +232,7 @@ allf.loc[s_s1:e_s1,'bet_max'] = 1
 allf['fi_len_round'] = allf.fi_length_summed_med.map('{:,.3e}'.format)
 
 #parameter to write to tex file
-w_p = ['track_id','track_start','track_end','med_l','north','med_tilt','fi_len_round','cat_id','num_inst','bet_max']
+w_p = ['track_id','track_start','track_end','med_l','north','med_tilt','fi_len_round','cat_id','unq_num','bet_max']
 #Write important parameters to output file
 allf[w_p].sort_values(by=['track_start']).to_latex('ha_filament_table.tex',index_names=False,float_format='%.1f')
 
@@ -997,20 +997,43 @@ fig9.savefig('plots/tilt_during_diff_cat4.eps',bbox_pad=.1,bbox_inches='tight')
 #Categories to loop over
 #Just use 123 and 4 2018/05/02
 #heat_map = ['allf','fil123','fil4']
-heat_map = ['fil123','fil4']
+#Use all filaments on 1 plot
+#heat_map = ['fil123','fil4']
+heat_map = ['allf']
 #Tilt as a function of latitude for inbetween and during/after solar maximum times
-fig_joy, axs_joy = plt.subplots(figsize=(6,len(heat_map)*6),nrows=len(heat_map),sharex=True)
+
+#break down if heat_map is greater than 1 2108/05/10 J. Prchlik
+if len(heat_map) > 1:
+    fig_joy, axs_joy = plt.subplots(figsize=(6,len(heat_map)*6),nrows=len(heat_map),sharex=True)
+else:
+    fig_joy, ax_joy = plt.subplots(figsize=(6,6))
+
 fig_joy.subplots_adjust(hspace=0.001,wspace=0.001)
 
 
 
+#Set up bins for Joy's Law Heat map
 resx = 5
 resy = 5
 xbins = np.arange(0,100,resx)
 ybins = np.arange(0,100,resy)
 
+#degree position for Joy's Law annotation
+joy_p = 20.
+
+#loop and plot joy's law
 for i,j in enumerate(heat_map):
-    ax_joy = axs_joy[i]
+
+    #add fix if making a multip plot 2018/05/10 J. Prchlik
+    if len(heat_map) > 1:
+        ax_joy = axs_joy[i]
+
+    #label line as joy's law in first interation
+    if i == 0: ax_joy.annotate("Joy's Law",xy=(joy_p,gam0*np.sin(np.radians(joy_p))),xycoords='data',
+                               xytext=(10.,80.),textcoords='data',arrowprops=dict(facecolor='black',shrink=0.0),
+                               horizontalalignment='right', verticalalignment='top',
+                               fontsize=18)
+
     d = fil_dict[j]
     d[0] = d[0][~d[0].index.duplicated(keep='last')]
     #Switch to 2D histogram per Kathy's comments
