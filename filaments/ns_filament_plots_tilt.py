@@ -109,18 +109,30 @@ rng = pd.date_range('2011-06-01 00:00:00','2015-01-01 00:00:00',freq=sam)#.to_ti
 fil = pd.read_pickle('filament_categories_hgs_mean_l.pic')
 
 
+#Created length weighted tilt per instance
+fil['lw_tilt'] =  fil.fi_length*fil.fi_tilt
+
 #2018/05/10 J. Prchlik
 #get number of track instances per unique time
-group = fil[['num_inst','event_starttime','track_id']].groupby(['track_id','event_starttime'])
+group = fil[['num_inst','event_starttime','track_id','fi_tilt','fi_length','lw_tilt']].groupby(['track_id','event_starttime'])
 #count number of unique times per track
 track_int = pd.DataFrame(group.size().groupby(level=0).size(),columns=['unq_num'])
+
+#Get the weighted track instance per time tilt (i.e. 1 tilt per time period)
+wmt_track = pd.DataFrame((group.lw_tilt.sum()/group.fi_length.sum()).groupby(level=0).median(),columns=['wm_med_tilt'])
+
+
+#combine new values into 1 dataframe
+track_int = track_int.join(wmt_track)
+
 #add back into filament data set
 fil = fil.join(track_int)
-
 #remove track id with less than 5 instances
 fil = fil.loc[fil.unq_num >= 5,:]
 
-
+#use the new fi length weight mean tilt median
+fil.rename(columns={'med_tilt':'um_med_tilt'},inplace=True)
+fil.rename(columns={'wm_med_tilt':'med_tilt'},inplace=True)
 
 #drop specificed indices from inspection 2018/04/19 J. Prchlik
 fil.drop(drop_ind,inplace=True)
@@ -525,8 +537,9 @@ for j,i in enumerate(tilt_time):
         rax.errorbar(mbs.index,mbs.med_tilt_mean,xerr=timedelta(days=14),yerr=tot_err_s,capsize=3,barsabove=True,fmt='--',color='black',linewidth=3,label='Southern Mean ({0})'.format(sam))
         
         #Make tilt versus time plot
-        rax.scatter(bn.index,bn.med_tilt,color='magenta',marker='o',label='Northern')
-        rax.scatter(bs.index,bs.med_tilt,color='grey',marker='D',label='Southern')
+        #remove so plot is more clear for presentation 2018/05/12 J. Prchlik
+        ###rax.scatter(bn.index,bn.med_tilt,color='magenta',marker='o',label='Northern')
+        ###rax.scatter(bs.index,bs.med_tilt,color='grey',marker='D',label='Southern')
 
         #Add different and similar lines 2018/03/30 J. Prchlik
         #Remove dashed lines for solar cycle 2018/05/10 J. Prchlik
