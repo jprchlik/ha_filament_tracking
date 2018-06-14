@@ -118,11 +118,17 @@ group = fil[['num_inst','event_starttime','track_id','fi_tilt','fi_length','lw_t
 #count number of unique times per track
 track_int = pd.DataFrame(group.size().groupby(level=0).size(),columns=['unq_num'])
 
-#Get the weighted track instance per time tilt (i.e. 1 tilt per time period)
-wmt_track = pd.DataFrame((group.lw_tilt.sum()/group.fi_length.sum()).groupby(level=0).median(),columns=['wm_med_tilt'])
+#Get the weighted track instance per time tilt (i.e. 1 tilt and length per time period)
+wmt_track = pd.DataFrame((group.lw_tilt.sum()/group.fi_length.sum()).groupby(level=0).median(),
+                          columns=['wm_med_tilt'])
 
+#Had to hack this way not really sure why 2018/06/14 J. Prchlik
+b = (group.fi_length.sum()).groupby(level=0).median()
+wmt_track_b = pd.DataFrame(b)
+wmt_track_b.rename(columns={'fi_length':'sum_med_length'},inplace=True)
 
 #combine new values into 1 dataframe
+wmt_track = wmt_track.join(wmt_track_b)
 track_int = track_int.join(wmt_track)
 
 #add back into filament data set
@@ -243,7 +249,7 @@ allf.set_index(allf.event_starttime_dt,inplace=True)
 allf.loc[s_s1:e_s1,'bet_max'] = 1 
 
 #round off the filament length
-allf['fi_len_round'] = allf.fi_length_summed_med.map('{:,.3e}'.format)
+allf['fi_len_round'] = allf.sum_med_length.map('{:,.3e}'.format)
 
 #parameter to write to tex file
 w_p = ['track_id','track_start','track_end','med_l','north','med_tilt','fi_len_round','cat_id','unq_num','bet_max']
