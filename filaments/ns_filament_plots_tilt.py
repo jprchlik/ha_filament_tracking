@@ -89,7 +89,7 @@ s_d2 = '2013/10/21'
 e_d2 = '2015/01/01'
 
 #time when tilts are similiar 
-s_s1 = '2012/08/01'
+s_s1 = '2011/12/01'
 e_s1 = '2013/10/20'
 
 
@@ -554,7 +554,7 @@ for j,i in enumerate(tilt_time):
         #Add different and similar lines 2018/03/30 J. Prchlik
         #Remove dashed lines for solar cycle 2018/05/10 J. Prchlik
         ###rax.axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
-        ###rax.axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
+        rax.axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
 
         #Y title
@@ -603,7 +603,7 @@ ax3[plot_rows-1].plot(ss_nm.index,ss_nm.s_ss.values,'--',color='black',label='So
 #Add different and similar lines 2018/03/30 J. Prchlik
 #Remove dashed lines for solar cycle 2018/05/10 J. Prchlik
 ###ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(s_s1)),linestyle='-.',color='blue',alpha=0.6)
-###ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
+ax3[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 
 #Add tick label rotations for datetime
 for tick in ax3[plot_rows-1].get_xticklabels():
@@ -931,7 +931,7 @@ fig11.savefig('plots/sg_curvature_time.eps',bbox_pad=.1,bbox_inches='tight')
 ###########################################
 
 #Plot Cumulative distributions of filaments in times where there is a difference between north and south
-fig9, ax9 = plt.subplots(figsize=(8,8))
+fig9, ax9 = plt.subplots(figsize=(6,6))
 
 cat4 = fil_dict['fil4'][0]
 
@@ -972,10 +972,10 @@ s_cat4_d['frac'] = np.arange(0,len(s_cat4_d))/float(len(s_cat4_d))
 s_cat4_s['frac'] = np.arange(0,len(s_cat4_s))/float(len(s_cat4_s))
 
 #finally plot
-ax9.plot(n_cat4_d.med_tilt,n_cat4_d.frac,label='North After' )
-ax9.plot(n_cat4_s.med_tilt,n_cat4_s.frac,label='North Between' )
-ax9.plot(s_cat4_d.med_tilt,s_cat4_d.frac,label='South After' )
-ax9.plot(s_cat4_s.med_tilt,s_cat4_s.frac,label='South Between' )
+ax9.plot(n_cat4_d.med_tilt,n_cat4_d.frac,linestyle='-',color='red',label='North Max.' )
+ax9.plot(n_cat4_s.med_tilt,n_cat4_s.frac,linestyle='-.',color='magenta',label='North Norm.' )
+ax9.plot(s_cat4_d.med_tilt,s_cat4_d.frac,linestyle='-',color='black',label='South Max.' )
+ax9.plot(s_cat4_s.med_tilt,s_cat4_s.frac,linestyle='-.',color='gray',label='South Norm.' )
 
 
 #Add A-D stats to plot
@@ -1006,15 +1006,19 @@ k2_ss_d =stats.ks_2samp(s_cat4_s.med_tilt.values,s_cat4_d.med_tilt.values)
 #ax9.text(40,0.35,'AD(NN;D/S) = {0:5.4f}'.format(ad_nn_d[2]),fontsize=12)
 #ax9.text(40,0.25,'AD(SS;D/S) = {0:5.4f}'.format(ad_ss_d[2]),fontsize=12)
 #Ks-two Plots
-ax9.text(40,0.52,'p(NS;B/B) = {0:4.3f}  '.format(k2_ns_s[1]),fontsize=12)
-ax9.text(40,0.47,'p(NS;A/A) = {0:4.3f}  '.format(k2_ns_d[1]),fontsize=12)
-ax9.text(40,0.42,'p(NN;A/B) = {0:4.3f}'.format(k2_nn_d[1]),fontsize=12)
-ax9.text(40,0.37,'p(SS;A/B) = {0:4.3f}'.format(k2_ss_d[1]),fontsize=12)
+max_str = '$_\mathrm{M}$'
+min_str = '$_\mathrm{N}$'
+#Removed text from plot 2018/06/15 J. Prchlik
+#ax9.text(25,0.22,'p(N{1},S{2})={0:4.3f}'.format(k2_ns_s[1],min_str,min_str),fontsize=16)
+#ax9.text(25,0.17,'p(N{1},S{2})={0:4.3f}'.format(k2_ns_d[1],max_str,max_str),fontsize=16)
+#ax9.text(25,0.12,'p(N{1},N{2})={0:4.3f}'.format(k2_nn_d[1],max_str,min_str),fontsize=16)
+#ax9.text(25,0.07,'p(S{1},S{2})={0:4.3f}'.format(k2_ss_d[1],max_str,min_str),fontsize=16)
 #ax9.text(50,0.20,'NN (S) = {0:5.4f}'.format(ad_nn_s[2]),fontsize=12)
 #ax9.text(50,0.10,'SS (S) = {0:5.4f}'.format(ad_ss_s[2]),fontsize=12)
+ax9.set_xlim([-90,90])
 
 
-ax9.legend(loc='upper left',frameon=False,fontsize=18)
+ax9.legend(loc='upper left',frameon=False,fontsize=17)
 ax9.set_ylabel('Cumulative Fraction')
 ax9.set_xlabel('Tilt [Deg.]')
 fancy_plot(ax9)
