@@ -201,15 +201,19 @@ plt.close(fig_ti)
 
 
 #setup figures
-fig, ax = plt.subplots(nrows=2,figsize=(4.25,12.5))
+#fig, ax = plt.subplots(nrows=2,figsize=(4.25,12.5))
+#fig, ax = plt.subplots(nrows=2,figsize=(4.25,12.5))
+fig, ax = plt.subplots(figsize=(8.75,5.95),ncols=2,sharey=True) #Switched to two variables only 2018/06/14 J. Prchlik Switch to columns for presentation 2018/05/02
 fig1, ax1 = plt.subplots(figsize=(11.,8.5))
-fig2, ax2 = plt.subplots(figsize=(12.5,8.5),ncols=2,sharey=True) #Switched to two variables only 2018/03/30 J. Prchlik,nrows=2) Switch to columns for presentation 2018/05/02
-fig4, ax4 = plt.subplots(nrows=2,figsize=(8.5,11),sharex=True)
-fig5, ax5 = plt.subplots(nrows=2,figsize=(4.25,12))
+fig2, ax2 = plt.subplots(figsize=(7.75,5.95),ncols=2,sharey=True) #Switched to two variables only 2018/03/30 J. Prchlik Switch to columns for presentation 2018/05/02
+fig4, ax4 = plt.subplots(figsize=(12.5,8.5),ncols=2,sharey=True) #Switched to two variables only 2018/06/14 J. Prchlik Switch to columns for presentation 2018/05/02
+#fig5, ax5 = plt.subplots(nrows=2,figsize=(4.25,12))
+fig5, ax5 = plt.subplots(figsize=(12.5,8.5),ncols=2,sharey=True) #Switched to two variables only 2018/06/14 J. Prchlik Switch to columns for presentation 2018/05/02
 ax2 = ax2.ravel()
 #fig.subplots_adjust(hspace=0.001,wspace=0.001)
 fig4.subplots_adjust(hspace=0.001)
 fig2.subplots_adjust(hspace=0.001,wspace=0.001) #squished together 2018/05/02 J. Prchlik
+fig.subplots_adjust(hspace=0.001,wspace=0.001) #squished together 2018/05/02 J. Prchlik
 #fig5.subplots_adjust(hspace=0.001,wspace=0.001)
 
 #set up random distribution for comparison
@@ -293,8 +297,8 @@ for j,i in enumerate(cuml_keys):
     k2 = stats.ks_2samp(s.med_tilt.values,n.med_tilt.values)
     
    
-    ax[0].plot(n.med_tilt,n.dis,color=d[1],linestyle=d[3],label=d[4])
-    ax[1].plot(s.med_tilt,s.dis,color=d[1],linestyle=d[3],label=d[4])
+    ax[0].plot(n.med_tilt,n.dis,color=d[1],linestyle=d[3],label=d[4],linewidth=5)
+    ax[1].plot(s.med_tilt,s.dis,color=d[1],linestyle=d[3],label=d[4],linewidth=5)
 
 
     ax4[0].scatter(n.med_tilt,n.med_l,color=d[1],marker=d[2],label=d[4])
@@ -302,8 +306,8 @@ for j,i in enumerate(cuml_keys):
 
     ax1.scatter(d[0].med_l,d[0].med_tilt,color=d[1],marker=d[2],label=d[4])
 
-    ax2[j].plot(n.med_tilt,n.dis,color='red',label='Nothern')
-    ax2[j].plot(s.med_tilt,s.dis,color='black',linestyle='--',label='Southern')
+    ax2[j].plot(n.med_tilt,n.dis,color='red',label='Nothern',linewidth=5)
+    ax2[j].plot(s.med_tilt,s.dis,color='black',linestyle='--',label='Southern',linewidth=5)
     #Added printing of mean values to output
     print("##################################################################")
     print(i)
@@ -1024,7 +1028,7 @@ fig9.savefig('plots/tilt_during_diff_cat4.eps',bbox_pad=.1,bbox_inches='tight')
 #heat_map = ['allf','fil123','fil4']
 #Use all filaments on 1 plot
 #heat_map = ['fil123','fil4']
-heat_map = ['allf']
+heat_map = ['allf','fil123','fil4']
 #Tilt as a function of latitude for inbetween and during/after solar maximum times
 
 #break down if heat_map is greater than 1 2108/05/10 J. Prchlik
@@ -1056,10 +1060,11 @@ for i,j in enumerate(heat_map):
         ax_joy = axs_joy[i]
 
     #label line as joy's law in first interation
-    if i == 0: ax_joy.annotate("Joy's Law",xy=(joy_p,gam0*np.sin(np.radians(joy_p))),xycoords='data',
-                               xytext=(10.,90.),textcoords='data',arrowprops=dict(facecolor='black',shrink=0.0),
-                               horizontalalignment='left', verticalalignment='top',
-                               fontsize=22)
+    #Removing Joy's Law annotation 2018/06/14 J. Prchlik
+    ##if i == 0: ax_joy.annotate("Joy's Law",xy=(joy_p,gam0*np.sin(np.radians(joy_p))),xycoords='data',
+    ##                           xytext=(10.,90.),textcoords='data',arrowprops=dict(facecolor='black',shrink=0.0),
+    ##                           horizontalalignment='left', verticalalignment='top',
+    ##                           fontsize=22)
 
     d = fil_dict[j]
     d[0].set_index(d[0].track_id,inplace=True)
@@ -1073,8 +1078,9 @@ for i,j in enumerate(heat_map):
     X, Y = np.meshgrid(xedges, yedges)
     plotc = ax_joy.pcolormesh(X,Y,H,label=None,cmap=ccmap,vmin=1)
     #Add Joy's law from Stenflo & Kosovichev (2012)
-    latg = np.arange(0,90)
-    ax_joy.plot(latg,gam0*np.sin(np.radians(latg)),'--',color='black',linewidth=3)
+    #Removing Joy's Law annotation 2018/06/14 J. Prchlik
+    ##latg = np.arange(0,90)
+    ##ax_joy.plot(latg,gam0*np.sin(np.radians(latg)),'--',color='black',linewidth=3)
 
     #Print percentage below Joy's Law 2018/05/02 J. Prchlik
     print('################################################')
@@ -1326,7 +1332,7 @@ fancy_plot(ax5[1])
 #fancy_plot(ax7)
 
 
-ax[0].legend(loc='upper left',frameon=False,fontsize=14)
+ax[0].legend(loc='upper left',frameon=False,fontsize=16)
 ax1.legend(loc='upper center',frameon=True ,handletextpad=-.112,scatterpoints=1,fontsize=18)
 ax2[0].legend(loc='upper left',frameon=False,fontsize=16)
 ax3[0].legend(loc='upper left',frameon=False,handletextpad=.112,scatterpoints=1,fontsize=12,handlelength=1)
