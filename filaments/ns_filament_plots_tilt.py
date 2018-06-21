@@ -668,6 +668,8 @@ ef_2  = pd.read_pickle('emerging_flux/query_output/all_ef_20100523-20120101.pic'
 #add earlier emerging flux eobservations to ones during the filament catelog
 ef_nm = pd.concat([ef_2,ef_nm])
 
+#Just get HMI emergin flux 
+ef_nm = ef_nm[((ef_nm.obs_channelid == 'LOS Magnetograms') & (ef_nm.frm_humanflag == 'false') & (ef_nm.search_instrument == 'HMI')) ]
 
 
 
