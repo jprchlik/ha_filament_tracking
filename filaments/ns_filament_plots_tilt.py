@@ -683,6 +683,7 @@ s_ef = ef_nm[ef_nm.hgs_y < -0.]
 #check = 'sum_unsigned_flux'
 #ratio almost looks like it has a year offset
 check = 'ef_proximityratio'
+check = 'ef_axislength'
 #check = 'ef_sumpossignedflux'
 #check = 'ef_sumpossignedflux'
 
@@ -697,15 +698,21 @@ tot_err_n = np.sqrt((bn_ef[check+'_std'].values/np.sqrt(bn_ef[check+'_cnt'].valu
 
 #plot average height of emerging flux
 #update with new plot rows parameter 2018/03/30 J. Prchlik
-ax8[plot_rows-1].errorbar(bn_ef.index,np.abs(bn_ef[check+'_mean'].values),yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
-ax8[plot_rows-1].errorbar(bs_ef.index,np.abs(bs_ef[check+'_mean'].values),yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
-ax8[plot_rows-1].plot(bn_ef.index,np.abs(bn_ef[check+'_mean'].values),'-',color='red',label='Northern ({0})'.format(sam))
-ax8[plot_rows-1].plot(bs_ef.index,np.abs(bs_ef[check+'_mean'].values),'--',color='black',label='Southern ({0})'.format(sam))
+ax8[plot_rows-1].errorbar(bn_ef.index,np.abs(bn_ef[check+'_cnt'].values),xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax8[plot_rows-1].errorbar(bs_ef.index,np.abs(bs_ef[check+'_cnt'].values),xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax8[plot_rows-1].plot(bn_ef.index,np.abs(bn_ef[check+'_cnt'].values),'-',color='red',label='Northern ({0})'.format(sam))
+ax8[plot_rows-1].plot(bs_ef.index,np.abs(bs_ef[check+'_cnt'].values),'--',color='black',label='Southern ({0})'.format(sam))
 
+ax8[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 fancy_plot(ax8[plot_rows-1])
 
-ax8[plot_rows-1].set_ylabel('Proximity Ratio')
+ax8[plot_rows-1].set_ylabel('EF Regions [\#]')
 ax8[plot_rows-1].set_xlabel('Time [UTC]')
+
+ax8[0].legend(loc='upper left',scatterpoints=1,frameon=False,fontsize=18)
+#Add tick label rotations for datetime
+for tick in ax8[plot_rows-1].get_xticklabels():
+    tick.set_rotation(25)
 
 fig8.savefig('plots/emerging_flux_time.png',bbox_pad=.1,bbox_inches='tight')
 fig8.savefig('plots/emerging_flux_time.eps',bbox_pad=.1,bbox_inches='tight')
