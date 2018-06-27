@@ -49,6 +49,12 @@ def real_resamp(x,dates,col='med_tilt'):
     y.loc[:,col+'_std'] = np.nan
     y.loc[:,col+'_sum'] = np.nan
     y.loc[:,col+'_cnt'] = np.nan
+
+    #Add extra parameters for emerging flux 2018/06/27 J. Prchlik
+    if col == 'area_atdiskcenter':
+        y.loc[:,col+'_unc'] = np.nan #Area uncertainty
+        y.loc[:,col+'_dtt'] = np.nan #Time in bin in days
+    
    
     #total number of dates
     t = len(dates)
@@ -70,6 +76,11 @@ def real_resamp(x,dates,col='med_tilt'):
             y.loc[i,col+'_std']  = np.std(x[col].values[use])
             y.loc[i,col+'_sum']  = np.sum(x[col].values[use])
             y.loc[i,col+'_cnt']  = use.size
+            #Add extra parameters for emerging flux 2018/06/27 J. Prchlik
+            if col == 'area_atdiskcenter':
+                y.loc[i,col+'_unc'] = np.sqrt(float(np.sum((x[col+'uncert'].values[use])**2))) #Area uncertainty
+                y.loc[i,col+'_dtt'] = (x.index[use].max()-x.index[use].min()).total_seconds()/(3600.*24.) #Time in bin in days
+    
 
     #Add time average time offset to days
     #toff = x.index[1:]-x.index[:-1]
@@ -665,11 +676,16 @@ for tick in ax3[plot_rows-1].get_xticklabels():
 ef_nm = pd.read_pickle('emerging_flux/query_output/all_ef_20120101-20141130.pic')
 #Add earlier observations
 ef_2  = pd.read_pickle('emerging_flux/query_output/all_ef_20100523-20120101.pic')
-#add earlier emerging flux eobservations to ones during the filament catelog
-ef_nm = pd.concat([ef_2,ef_nm])
+#Add a month of later observations
+ef_3  = pd.read_pickle('emerging_flux/query_output/all_ef_20141130-20150101.pic')
+#add earlier emerging flux observations to ones during the filament catalog
+ef_nm = pd.concat([ef_2,ef_nm,ef_3])
+
+#Double check events are unique
+ef_nm.drop_duplicates(subset=['SOL_standard'], keep='first', inplace=True)
 
 #Just get HMI emergin flux 
-ef_nm = ef_nm[((ef_nm.obs_channelid == 'LOS Magnetograms') & (ef_nm.frm_humanflag == 'false') & (ef_nm.search_instrument == 'HMI')) ]
+ef_nm = ef_nm[((ef_nm.obs_channelid == 'LOS Magnetograms') & (ef_nm.frm_humanflag == 'false') & (ef_nm.search_instrument == 'HMI') & (ef_nm.search_frm_name == 'SWAMIS-EF')) ]
 
 
 
@@ -686,6 +702,9 @@ s_ef = ef_nm[ef_nm.hgs_y < -0.]
 #ratio almost looks like it has a year offset
 check = 'ef_proximityratio'
 check = 'ef_axislength'
+
+#get area of EF at DC 2018/06/27
+check = 'area_atdiskcenter' # in km^2
 #check = 'ef_sumpossignedflux'
 #check = 'ef_sumpossignedflux'
 
@@ -694,21 +713,26 @@ bn_ef = real_resamp(n_ef,rng,col=check)
 bs_ef = real_resamp(s_ef,rng,col=check)
 
 #errors on sunspot number including counting
-tot_err_s = np.sqrt((bs_ef[check+'_std'].values/np.sqrt(bs_ef[check+'_cnt'].values))**2.)
-tot_err_n = np.sqrt((bn_ef[check+'_std'].values/np.sqrt(bn_ef[check+'_cnt'].values))**2.)
+#tot_err_s = np.sqrt((bs_ef[check+'_std'].values/np.sqrt(bs_ef[check+'_cnt'].values))**2.)
+#tot_err_n = np.sqrt((bn_ef[check+'_std'].values/np.sqrt(bn_ef[check+'_cnt'].values))**2.)
+#Added newly calculated errors based on sum of square reported errors in Mm^2
+tot_err_s = bn_ef[check+'_unc']/bn_ef[check+'_dtt']*1e-12
+tot_err_n = bs_ef[check+'_unc']/bs_ef[check+'_dtt']*1e-12
+
 
 
 #plot average height of emerging flux
 #update with new plot rows parameter 2018/03/30 J. Prchlik
-ax8[plot_rows-1].errorbar(bn_ef.index,np.abs(bn_ef[check+'_cnt'].values),xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
-ax8[plot_rows-1].errorbar(bs_ef.index,np.abs(bs_ef[check+'_cnt'].values),xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
-ax8[plot_rows-1].plot(bn_ef.index,np.abs(bn_ef[check+'_cnt'].values),'-',color='red',label='Northern ({0})'.format(sam))
-ax8[plot_rows-1].plot(bs_ef.index,np.abs(bs_ef[check+'_cnt'].values),'--',color='black',label='Southern ({0})'.format(sam))
+#Add new units of plot in Mm^2 per day
+ax8[plot_rows-1].errorbar(bn_ef.index,1e-12*bn_ef[check+'_sum'].values/bn_ef[check+'_dtt'].values,yerr=tot_err_n,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='s',color='red',label='Northern ({0})'.format(sam))
+ax8[plot_rows-1].errorbar(bs_ef.index,1e-12*bs_ef[check+'_sum'].values/bs_ef[check+'_dtt'].values,yerr=tot_err_s,xerr=timedelta(days=14),capsize=3,barsabove=True,linewidth=3,fmt='D',color='black',label='Southern ({0})'.format(sam))
+ax8[plot_rows-1].plot(bn_ef.index,1.e-12*bn_ef[check+'_sum'].values/bn_ef[check+'_dtt'].values,'-',color='red',label='Northern ({0})'.format(sam))
+ax8[plot_rows-1].plot(bs_ef.index,1.e-12*bs_ef[check+'_sum'].values/bs_ef[check+'_dtt'].values,'--',color='black',label='Southern ({0})'.format(sam))
 
 ax8[plot_rows-1].axvline(mdates.date2num(pd.to_datetime(e_s1)),linestyle='-.',color='blue',alpha=0.6)
 fancy_plot(ax8[plot_rows-1])
 
-ax8[plot_rows-1].set_ylabel('EF Regions [\#]')
+ax8[plot_rows-1].set_ylabel('EF Area \n [Gm$^2$/day]')
 ax8[plot_rows-1].set_xlabel('Time [UTC]')
 
 ax8[0].legend(loc='upper left',scatterpoints=1,frameon=False,fontsize=18)
