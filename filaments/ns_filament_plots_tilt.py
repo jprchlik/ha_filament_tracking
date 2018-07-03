@@ -214,7 +214,7 @@ plt.close(fig_ti)
 #setup figures
 #fig, ax = plt.subplots(nrows=2,figsize=(4.25,12.5))
 #fig, ax = plt.subplots(nrows=2,figsize=(4.25,12.5))
-fig, ax = plt.subplots(figsize=(8.75,5.95),ncols=2,sharey=True) #Switched to two variables only 2018/06/14 J. Prchlik Switch to columns for presentation 2018/05/02
+fig, ax = plt.subplots(figsize=(7.75,5.95),ncols=2,sharey=True) #Switched to two variables only 2018/06/14 J. Prchlik Switch to columns for presentation 2018/05/02
 fig1, ax1 = plt.subplots(figsize=(11.,8.5))
 fig2, ax2 = plt.subplots(figsize=(7.75,5.95),ncols=2,sharey=True) #Switched to two variables only 2018/03/30 J. Prchlik Switch to columns for presentation 2018/05/02
 fig4, ax4 = plt.subplots(figsize=(12.5,8.5),ncols=2,sharey=True) #Switched to two variables only 2018/06/14 J. Prchlik Switch to columns for presentation 2018/05/02
