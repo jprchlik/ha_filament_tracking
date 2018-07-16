@@ -65,10 +65,10 @@ def real_resamp(x,dates,col='med_tilt'):
 
     for j,i in enumerate(dates):
 
-        if j < t-2:
-            use, = np.where((x.index > i) & (x.index < dates[j+1]))
+        if j < t-1:
+            use, = np.where((x.index >= i) & (x.index < dates[j+1]))
         else:
-            use, = np.where(x.index > i)
+            use, = np.where(x.index >= i)
           
         if use.size > 0:
             y.loc[i,col+'_mean'] = np.mean(x[col].values[use])
@@ -684,11 +684,15 @@ ef_nm = pd.concat([ef_2,ef_nm,ef_3])
 #Double check events are unique
 ef_nm.drop_duplicates(subset=['SOL_standard'], keep='first', inplace=True)
 
+
 #Just get HMI emergin flux 
 ef_nm = ef_nm[((ef_nm.obs_channelid == 'LOS Magnetograms') & (ef_nm.frm_humanflag == 'false') & (ef_nm.search_instrument == 'HMI') & (ef_nm.search_frm_name == 'SWAMIS-EF')) ]
 
+#remove largest ef area because it is a false positive 2018/07/16 J. Prchlik
+bad_index = ef_nm.query('SOL_standard == "SOL2014-11-21T05:47:15L261C100"').index
+ef_nm.drop(bad_index,inplace=True)
 
-
+#Get flux in emerging flux areas
 ef_nm.loc[:,'sum_unsigned_flux'] = ef_nm.ef_sumpossignedflux-ef_nm.ef_sumnegsignedflux
 ef_nm.loc[:,'sum_signed_flux']   = ef_nm.ef_sumpossignedflux+ef_nm.ef_sumnegsignedflux
 
