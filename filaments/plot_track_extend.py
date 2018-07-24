@@ -196,6 +196,14 @@ for j,i in enumerate(sfil['hpc_bbox'].values):
 
 add_aia_image(pd.to_datetime(pfil.event_starttime_dt.values[0]),ax)
 
+#Add point were new AR emerges
+ann = ax.annotate('Flux \n Emergence',xy=(-350,-288),xycoords='data',
+                  xytext=(0,0),textcoords='data',
+                  size=22,va='center',ha='center',
+                  arrowprops=dict(arrowstyle='-|>',
+                             connectionstyle='arc3,rad=0.4',
+                             relpos=(0.,0.),fc='black',linewidth=4))
+
 ax.text(-1000,-1000,pfil.event_starttime.values[5],color='white',fontsize=24,fontweight='bold')
 ax.add_patch(r1)
 ax.set_axis_off()
