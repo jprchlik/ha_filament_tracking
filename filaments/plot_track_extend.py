@@ -13,6 +13,7 @@ from matplotlib.colors import Normalize
 from sunpy.cm import cm
 
 from sunpy.sun import solar_semidiameter_angular_size
+from sunpy.coordinates.ephemeris import get_sun_L0
 import astropy.units as u
 from astropy.io import fits as  pyfits
 import datetime
@@ -146,11 +147,12 @@ def add_aia_image(stime,ax,tries=4):
     rfad = 1.02
     rep2 = (r2 < rmin)
     rep3 = ((r2 > rmin) & (r2 < rfad))
+    #set alpha values
     img_193[...,3][rep2] = 0
     img_193[...,3][rep3] = (r2[rep3]-rmin)/(rfad-rmin)
 
     #plot the image in matplotlib
-    ax.imshow(img_193,interpolation='none',cmap=cm.sdoaia193,origin='lower',vmin=(15.)**0.25,vmax=(3500.)**0.25,extent=[minx,maxx,miny,maxy])
+    ax.imshow(img_193,interpolation='none',cmap=cm.sdoaia193,origin='lower',vmin=(15.)**0.25,vmax=(3500.)**0.25,extent=[minx,maxx,miny,maxy],zorder=0)
     return ax
 
 
@@ -171,12 +173,12 @@ sfil = fil.loc[track_sp,:]
 
 sr = sun.solar_semidiameter_angular_size()
 
-r1 = plt.Circle((0,0),radius=sr.value,color='lightgray',fill=True,linewidth=5,zorder=0)
+r1 = plt.Circle((0,0),radius=sr.value,color='lightgray',fill=True,linewidth=5,zorder=1)
 
 
 
 
-fig, ax =plt.subplots(figsize=(10,10))
+fig, ax =plt.subplots(figsize=(10,10),dpi=300)
 
 #draw reference lines
 draw_lines(sr,ax)
@@ -204,11 +206,27 @@ ann = ax.annotate('Flux \n Emergence',xy=(-350,-288),xycoords='data',
                              connectionstyle='arc3,rad=0.4',
                              relpos=(0.,0.),fc='black',linewidth=4))
 
+#Add arrows pointing to Coronal Cavity based on comments from Dustin
+#Get long. correction for carrington longitude
+#correction = get_sun_L0('2014/4/17 06:40').value
+#Used the useful but deprecated function from sunpy wcs.convert_hg_hpc(228.6+correction,-33.5) 
+# can reach wcs function by using from sunpy import wcs
+# Those coordinates come from C214936247N      38.25      33.50     268.20     228.60   2014/4/14_5:42    2014/4/17_6:4
+# in cavitylist_date.txt
+#South West Cavity
+cha_sw = ax.annotate('Cavity',xy=(792.9+95,-529.5+10),xycoords='data',
+                  xytext=(-70,-820.),textcoords='data',
+                  size=22,va='center',ha='center',
+                  arrowprops=dict(arrowstyle='-|>',
+                             connectionstyle='arc3,rad=0.1',
+                             relpos=(1.,.5),fc='black',linewidth=4))
+
+
 ax.text(-1000,-1000,pfil.event_starttime.values[5],color='white',fontsize=24,fontweight='bold')
 ax.add_patch(r1)
 ax.set_axis_off()
 ax.set_xlim([-1.1*sr.value,1.1*sr.value])
 ax.set_ylim([-1.1*sr.value,1.1*sr.value])
-fig.savefig('plots/track_evolution_{0:06d}.png'.format(track_id),bbox_pad=.1,bbox_inches='tight')
-fig.savefig('plots/track_evolution_{0:06d}.eps'.format(track_id),bbox_pad=.1,bbox_inches='tight')
-plt.show()
+fig.savefig('plots/track_evolution_{0:06d}.png'.format(track_id),bbox_pad=0.0,bbox_inches='tight',dpi=300)
+fig.savefig('plots/track_evolution_{0:06d}.eps'.format(track_id),bbox_pad=0.0,bbox_inches='tight',dpi=300)
+#plt.show()
