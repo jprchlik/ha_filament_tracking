@@ -68,7 +68,7 @@ class halpha_plot:
     """ A class which creates an image from an input file.
         Currently used to create H alpha GONG images."""
 
-    def __init__(self,dat,ifile,pdir,lref=False,dpi=100,ext='png',add_aia=False):
+    def __init__(self,dat,ifile,pdir,lref=False,dpi=100,ext='png',add_aia=False,aia_wav=[193]):
         """Initializes variables to be used by the halpha_plot class.
 
            This function just creates the object to be class later.
@@ -88,7 +88,9 @@ class halpha_plot:
            ext: string. optional
               File extension of output image (Default = 'png')
            add_aia: Boolean, optional
-              Add AIA 193 image to outer edge (Default = False)
+              Add AIA image to outer edge (Default = False)
+           aia_wav: list
+              List of wavelengths to download (Default = [193])
          
            Returns
            -------
@@ -102,6 +104,7 @@ class halpha_plot:
         self.dpi  = dpi
         self.ext  = ext
         self.add_aia= add_aia
+        self.aia_wav = aia_wav
 
     def draw_lines(self):
         """
@@ -128,9 +131,9 @@ class halpha_plot:
 
         file_fmt = '{0:%Y/%m/%d/H%H00/AIA%Y%m%d_%H%M_}'
         tries = 4
-        wave = [193]
+        wave = self.aia_wav
          
-        gsf.download(self.stop,self.stop+datetime.timedelta(minutes=tries),
+        gsf.download(self.stop-datetime.timedelta(minutes=tries),self.stop+datetime.timedelta(minutes=tries),
                      datetime.timedelta(minutes=1),'',nproc=1,
                      syn_arch='http://jsoc.stanford.edu/data/aia/synoptic/',
                      f_dir=file_fmt,d_wav=wave)
@@ -148,6 +151,7 @@ class halpha_plot:
             #exit after tries
             if run == tries+1:
                 nofile = False
+                return
 
         img = sunpy.map.Map(filep)
         #Block add J. Prchlik (2016/10/06) to give physical coordinate values 
