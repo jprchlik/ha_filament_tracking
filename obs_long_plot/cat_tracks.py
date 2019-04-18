@@ -27,9 +27,9 @@ from matplotlib.path import Path
 
 #mimic program rot_hpc with new routines
 def rot_hpc(xs,ys,start,end,rot_type='meaningless'):
-    xs, ys = self.calc_poly_values(coor)
+    #xs, ys = calc_poly_values(coor)
     #update deprecated function J. Prchlik 2017/11/03
-    c = SkyCoord(xs*u.arcsec,ys*u.arcsec,obstime=start,frame=frames.Helioprojective)                    
+    c = SkyCoord(xs,ys,obstime=start,frame=frames.Helioprojective)                    
     #rotate start points to end time
     nc = solar_rotate_coordinate(c,end)
 
@@ -70,19 +70,20 @@ def calc_poly_values(coor):
     return corarra[:,0],corarra[:,1]
 
 
+file_name = '../init_data/FITracked.txt'
+pick_name = file_name.replace('.txt','.pic')
 
 rot_type = 'howard'
 
-pickled = os.path.isfile('../init_data/FITracked_3yr.pic')
+pickled = os.path.isfile(pick_name)
 if pickled:#use pickle file if it already exits
-    dat = pd.read_pickle('../init_data/FITracked_3yr.pic')
+    dat = pd.read_pickle(pick_name)
 else: #create pickle file if doesnt exist
-    infile = '../init_data/FITracked_3yr.txt'
     #dat = ascii.read('../init_data/FITracked_3yr.txt',delimiter='\t',guess=False)
-    dat = pd.read_csv(infile,delimiter='\t')
+    dat = pd.read_csv(file_name,delimiter='\t')
     #add variables like datetime and average position to dat
     dat = ap.add_props(dat).dat
-    dat.to_pickle('../init_data/FITracked_3yr.pic')
+    dat.to_pickle(pick_name)
 
 
 #testing purposes
@@ -94,7 +95,7 @@ else: #create pickle file if doesnt exist
 uniqlist = np.unique(dat['track_id'].values).tolist()
 
 #cadence to look for max solar extent
-dt = timedelta(minutes=20)
+dt = timedelta(minutes=120)
 
 #for i in uniqlist:
 ii = 0
@@ -104,7 +105,8 @@ replacelst = []
 #loop over all uniq track names
 for i in uniqlist:
 
-    if i in replacelst: continue #skip track if already replaced
+    if i in replacelst:
+        continue #skip track if already replaced
 
 #get where pandas dataframe equals track id
     track, = np.where(dat['track_id'].values == i)
@@ -134,7 +136,9 @@ for i in uniqlist:
             
             curr = np.sqrt(curx.value**2.+cury.value**2.)
     
-            if maxt > t132b + timedelta(days=14): curr = 90000. #if the rotation goes for more than 14 days assume error and end search
+            if maxt > t132b + timedelta(days=14):
+                curr = 90000. #if the rotation goes for more than 14 days assume error and end search
+
             p += 1 
     
     
@@ -148,13 +152,8 @@ for i in uniqlist:
         c5i = dat['track_id'].values != i #it is not already a part of the same track
      
     
-        print '######################################################'
-        print 'Track = {0:4d}'.format(i)
-    #    print np.where(c1t)
-    #    print np.where(c2x)
-    #    print np.where(c3y)
-    #    print np.where(c4t)
-    #    print np.where(c5i)
+        print('######################################################')
+        print('Track = {0:4d}'.format(i))
         #cut track to try and match
         possm, = np.where((c1t) & (c2x) & (c3y) & (c4t) & (c5i)) 
 
@@ -172,9 +171,9 @@ for i in uniqlist:
              #convert 2 data points to array
              t2posx,t2posy = calc_poly_values(dat['hpc_bbox'].values[j])
            
-             print 'Poss. Match with track = {0:4d}'.format(dat['track_id'].values[j])
+             print('Poss. Match with track = {0:4d}'.format(dat['track_id'].values[j]))
     
-    #convert coordinates to format for shapely readin
+             #convert coordinates to format for shapely readin
              c1fmt = [(t12posx[p],t12posy[p]) for p in range(len(t12posy))]
              c2fmt = [(t2posx[p],t2posy[p]) for p in range(len(t2posy))]
 
@@ -183,15 +182,8 @@ for i in uniqlist:
 
              #increase the "real" filament size by 20% to find near neighbors 
              scale = 3.0 
-#             scale = 1.2
-#             bound = np.array(poly1.boundary.xy).T
-#             point = np.array(poly1.representative_point().xy).T
-#             polyb = Polygon(scale*(bound-point))
-#             offst = point-np.array(polyb.representative_point().xy).T
-#             print offst
-#             polyb = Polygon(scale*(bound-point)+offst)
             
-#get the shape of the intersections
+             #get the shape of the intersections
              try:
                  poly1 = Polygon(c1fmt)
                  polyl = LineString(c1fmt)
@@ -202,28 +194,22 @@ for i in uniqlist:
                  #fractional area overlap
                  a1r = poly3.area/poly1.area 
                  a2r = poly3.area/poly2.area
-                 print 'Area enlargement = {0:5.4f}'.format(polyb.area/poly1.area)
-                 print 'Area overlap with Prim = {0:4.3f}, with Sec = {1:4.3f}'.format(a1r,a2r)
+                 print('Area enlargement = {0:5.4f}'.format(polyb.area/poly1.area))
+                 print('Area overlap with Prim = {0:4.3f}, with Sec = {1:4.3f}'.format(a1r,a2r))
              except:
-                 print 'Could not calculate overlap'
+                 print('Could not calculate overlap')
                  continue
-#dummy test plotting
-            ## fig, ax =plt.subplots()
-            ## ax.plot(t12posx,t12posy,color='blue')
-            ## ax.plot(t2posx,t2posy,color='red')
-            ## ax.plot(np.array(polyb.boundary.xy)[0],np.array(polyb.boundary.xy)[1],color='green')
-            ## fig.savefig('test_track_{0:1d}_w_track_{1:1d}.png'.format(i,j))
             
  
-#Switching to intersecting shape   
-##             if poly1.intersects(poly2):
+             #Switching to intersecting shape   
              alimit = 0.05 #must contain 5% of the area in intersection
              if ((a1r > alimit) | (a2r > alimit)):
                  #replace track number
-                 print 'Match with track = {0:4d}'.format(dat['track_id'].values[j])
+                 print('Match with track = {0:4d}'.format(dat['track_id'].values[j]))
                  replace, = np.where(dat['track_id'].values == dat['track_id'].values[j])
                  dat['track_id'].values[replace] = i #replace matched track with previous id
-                 if dat['track_id'].values[j] not in uniqlist: replacelst.append(dat['track_id'].values[j])
+                 if dat['track_id'].values[j] not in uniqlist:
+                     replacelst.append(dat['track_id'].values[j])
     
 
          
@@ -231,7 +217,7 @@ for i in uniqlist:
 
     ii += 1 #increment at end of loop
 
-outf = 'concatentated_per_enlarged_shape_3yr_file.pic'
+outf = 'concatentated_per_enlarged_shape_6yr_file_parellel.pic'
 dat.to_pickle(outf)
 
-make_gong_cat.main(outf,'filament_tracking_enlarged_5_per.mp4')
+#make_gong_cat.main(outf,'filament_tracking_enlarged_5_per.mp4')
