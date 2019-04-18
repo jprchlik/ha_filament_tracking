@@ -67,7 +67,8 @@ class download:
         
         #Download the files locally in parallel if nproc greater than 1
         if self.nproc < 2:
-            for i in par_list: wrap_download_file(i)
+            for i in par_list:
+                wrap_download_file(i)
         else:
             pool = Pool(processes=self.nproc)
             outp = pool.map(wrap_download_file,par_list)
