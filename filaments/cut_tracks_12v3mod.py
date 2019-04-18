@@ -6,7 +6,7 @@ import shapely as sp
 import shapely.geometry as geo
 from shapely.wkt import dumps, loads
 import sunpy.wcs
-import pyfits
+from astropy.io import fits as pyfits
 from datetime import datetime, timedelta
 import itertools
 from scipy import stats
@@ -17,7 +17,8 @@ import statsmodels.api as sm
 ###############################################################################
 
 ### read in filament track file
-fil=pd.read_csv("concatentated_per_enlarged_shape_3yr_file.txt",delimiter="\t")
+#fil=pd.read_csv("concatentated_per_enlarged_shape_3yr_file.txt",delimiter="\t")
+fila = pd.read_pickle("../obs_long_plot/concatentated_per_enlarged_shape_6yr_file_parellel.pic")
 ### relative base directory for pickle file
 bdir = "../obs_long_plot/"
 ### pickle file name
@@ -222,16 +223,20 @@ cav['buff_end_lat_hpc'] = buff_end_lat_hpc
 
 ### making cav and fil start/end times datetime objects
 ### when matching filaments to cavities, allow a 12 hour buffer
-fil_start_ymd = []
-for i,j in enumerate(fil['event_starttime_dt']):
-    fil_start_ymd.append(datetime.strptime(fil['event_starttime_dt'][i], '%Y-%m-%d %H:%M:%S'))
-    #fil_start_ymd[i] = fil_start_ymd[i].replace(hour=0, minute=0, second=0)
-fil['event_starttime_dt'] = fil_start_ymd
-fil_end_ymd = []
-for i,j in enumerate(fil['event_endtime_dt']):
-    fil_end_ymd.append(datetime.strptime(fil['event_endtime_dt'][i], '%Y-%m-%d %H:%M:%S'))
-    #fil_end_ymd[i] = fil_end_ymd[i].replace(hour=0, minute=0, second=0)
-fil['event_endtime_dt'] = fil_end_ymd
+#NOT NEEDED BECAUSE EVENT_STARTTIME_DT AND EVENT_ENDTIME_DT are already properly formatted in pickle file 2019/04/16 J. Prchlik
+###fil_start_ymd = []
+###for i,j in enumerate(fil['event_starttime_dt']):
+###    #By using pickle file event_starttime_dt is a timestamp not txt 
+###    #fil_start_ymd.append(datetime.strptime(fil['event_starttime_dt'][i], '%Y-%m-%d %H:%M:%S'))
+###    fil_start_ymd.append(fil['event_starttime_dt'][i]))
+###    #fil_start_ymd[i] = fil_start_ymd[i].replace(hour=0, minute=0, second=0)
+###fil['event_starttime_dt'] = fil_start_ymd
+###fil_end_ymd = []
+###for i,j in enumerate(fil['event_endtime_dt']):
+###    #By using pickle file event_endtime_dt is a timestamp not txt 
+###    fil_end_ymd.append(fil['event_endtime_dt'][i])
+###    #fil_end_ymd[i] = fil_end_ymd[i].replace(hour=0, minute=0, second=0)
+###fil['event_endtime_dt'] = fil_end_ymd
 
 cav_start_ymd = []
 for i,j in enumerate(cav['start_date']):
@@ -284,20 +289,16 @@ for x,y in enumerate(cav['start_date_dt']):
     if (cav_end_ymd[x] - y).days >= 14:
         ### loop through filaments
         for i,j in enumerate(fil['track_start']):
-
             #Passing logic for catigory id 
             #track goes limb to limb
             goodtrack = fil['track_id'][i] in good_ids
-
             #filament track is on the west limb the same time as a cavity
             ### if the filament start time is between the cavity start time + buffer
             ### and the cavity end time + buffer, check the latitude.
             cav_tmat = j >= (y - timedelta(hours=hours_buff)) and j <= (cav['end_date_dt'][x] + timedelta(hours=hours_buff))
-
             #filament is in same location as the cavity
             ### make sure the filament occurs at the same latitude as the cavity
             cav_pmat = fil['hpc_bbox'][i].intersects(cav_box)
-
             if ((goodtrack) & (cav_tmat) & (cav_pmat)):
                 fil_list.append(fil['track_id'][i])     
                 fil['cat_id'][i] = 1
@@ -321,16 +322,13 @@ for x,y in enumerate(cav['start_date_dt']):
                 #Passing logic for catigory id 
                 #track goes limb to limb
                 goodtrack = fil['track_id'][i] in good_ids
-
                 #filament track is on the west limb the same time as a cavity
                 ### if the filament start time is between the cavity start time + buffer
                 ### and the cavity end time + buffer, check the latitude.
                 cav_tmat = j >= (y - timedelta(hours=hours_buff)) and j <= (cav['end_date_dt'][x] + timedelta(hours=hours_buff))
-
                 #filament is in same location as the cavity
                 ### make sure the filament occurs at the same latitude as the cavity
                 cav_pmat = fil['hpc_bbox'][i].intersects(cav_box)
-
                 if ((goodtrack) & (cav_tmat) & (cav_pmat)):
                     fil_list.append(fil['track_id'][i])     
                     fil['cat_id'][i] = 2
@@ -352,27 +350,18 @@ for x,y in enumerate(cav['start_date_dt']):
                 #Passing logic for catigory id 
                 #track goes limb to limb
                 goodtrack = fil['track_id'][i] not in good_ids
-
                 #filament track is on the west limb the same time as a cavity
                 ### if the filament start time is between the cavity start time + buffer
                 ### and the cavity end time + buffer, check the latitude.
                 cav_tmat = ((j >= (y - timedelta(hours=hours_buff))) and (j <= (cav['end_date_dt'][x] + timedelta(hours=hours_buff))))
-
                 #filament is in same location as the cavity
                 ### make sure the filament occurs at the same latitude as the cavity
                 cav_pmat = fil['hpc_bbox'][i].intersects(cav_box)
-        
-
-
-
                 #only include somewhat stable tracks in category 3
                 cav_inst = fil['num_inst'][i] > 3
-
-
                 if ((goodtrack) & (cav_tmat) & (cav_pmat) & (cav_inst)):
                     fil_list.append(fil['track_id'][i])     
                     fil['cat_id'][i] = 3
-
             ### if there are any filaments in the list, attach them to the corresponding cavity
         if len(fil_list) > 0:
             cat3[cav['cavity_id'][x]] = np.unique(fil_list)
@@ -439,7 +428,7 @@ fil['med_x_hpc'] = med_x_hpc
 fil.sort(['track_id','cat_id'],inplace=True)
 
 
-fil.to_pickle('filament_catagories.pic')
+fil.to_pickle('filament_catagories_7yr.pic')
 
 
 #get counts of array
