@@ -28,7 +28,7 @@ def create_images(i):
 #start = datetime.strptime('2013/01/00T00:00:00',fmt)
 #end = datetime.strptime('2013/01/31T23:59:59',fmt)
 
-def main(infile,outmov,outdir='/track_plots/',start='2012-01-01T00:00:00',end='2014-12-01T00:00:00',dfmt = '%Y-%m-%dT%H:%M:%S',inlref=False):
+def main(infile,outmov,outdir='/track_plots/',start='2011-01-01T00:00:00',end='2017-12-01T00:00:00',dfmt = '%Y-%m-%dT%H:%M:%S',inlref=False):
  
     """
     Create a movie with Halpha filament tracks overplotted on Halpha filament observations from GONG
