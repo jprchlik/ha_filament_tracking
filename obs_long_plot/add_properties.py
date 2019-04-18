@@ -49,7 +49,7 @@ class add_props:
     
 #add mean values to array
     def add_mean_val(self):
-        vals =  [ calc_mean_pos(coor) for coor in self.dat['hpc_bbox']]
+        vals =  [ calc_mean_pos(coor) for coor in self.dat['hpc_boundcc']]
         vals = np.array(vals)
         
         self.dat['meanx'] =vals[:,0]
@@ -60,10 +60,17 @@ class add_props:
         tid = np.unique(self.dat['track_id'].values)
         self.dat['total_event_start'] = 0
         self.dat['total_event_end']   = 0
-        for k in tid:
-            track, = np.where(self.dat['track_id'].values == k)
-            self.dat['total_event_start'][track] = np.min(self.dat['event_starttime_dt'][track])
-            self.dat['total_event_end'][track] = np.max(self.dat['event_endtime_dt'][track])
+        #Switched to faster grouping 2019/04/18 J. Prchlik
+        start = self.dat.groupby('track_id').event_starttime_dt.min()
+        end   = self.dat.groupby('track_id').event_endtime_dt.min()
+        start.rename('total_event_start',inplace=True)
+        end.rename('total_event_end',inplace=True)
+        self.dat = self.dat.set_index('track_id').join(end).join(start)
+        self.dat.reset_index(inplace=True)
+        #for k in tid:
+        #    track, = np.where(self.dat['track_id'].values == k)
+        #    self.dat['total_event_start'][track] = np.min(self.dat['event_starttime_dt'][track])
+        #    self.dat['total_event_end'][track] = np.max(self.dat['event_endtime_dt'][track])
 
 
     
