@@ -389,7 +389,9 @@ class halpha_plot:
             
                 roplot= roplot.tolist()
         #plot rotation of nearest filament placement
-                for k in roplot: self.plot_rotation(self.dat['event_starttime_dt'][k],self.dat['hpc_bbox'].values[k],color='teal',ids=self.dat['track_id'].values[k])
+                #fix hpc_bbox to hpc_boundcc because columns used to be off in Dustin's file
+                for k in roplot:
+                    self.plot_rotation(self.dat['event_starttime_dt'][k],self.dat['hpc_boundcc'].values[k],color='teal',ids=self.dat['track_id'].values[k])
         
         
         #Setup plots
